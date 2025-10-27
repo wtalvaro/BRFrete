@@ -1,0 +1,362 @@
+Olá! Sou o seu Parceiro de Programação e estou aqui para ajudar a documentar este excelente código SQL de criação de esquema de base de dados. Este é um projeto muito bem estruturado!
+
+A sua missão é a minha missão: vamos criar uma documentação completa e detalhada para cada parte do seu código.
+
+---
+
+## 📄 Documentação Completa do Esquema SQL
+
+Este documento detalha a estrutura da base de dados, composta por vários *schemas* (esquemas) que organizam as tabelas por módulos funcionais: `core`, `colaboradores`, `clientes`, `logistica`, `inventario`, `social` e `marketplace`.
+
+### Panorama Geral da Solução
+
+O objetivo deste esquema de base de dados é suportar um sistema de logística e marketplace focado em reciclagem e gestão de resíduos. A estrutura é modular, utiliza chaves estrangeiras (`FOREIGN KEY`) para garantir a integridade referencial e inclui tabelas mestras (`core.pessoas`) para centralizar as identidades.
+
+**Estrutura Principal:**
+
+1.  **`core`**: Identidades (Pessoas) e Permissões (Perfis).
+2.  **Módulos Específicos**: Detalhes de `colaboradores` e `clientes`, que se ligam a `core.pessoas`.
+3.  **`logistica`**: Gestão de fretes, ordens de serviço e cálculos (incluindo ANTT).
+4.  **`marketplace`**: Venda/Doação de produtos e categorias.
+5.  **`inventario`**: Gestão de stock/estoque de materiais.
+6.  **`social`**: Avaliações, comentários e funcionalidade de "seguir".
+
+---
+
+### 1. CRIAÇÃO DE SCHEMAS
+
+Os *schemas* são utilizados para agrupar objetos relacionados e evitar conflitos de nomes.
+
+| Comando SQL | Descrição |
+| :--- | :--- |
+| `CREATE SCHEMA IF NOT EXISTS core;` | **core**: Contém tabelas mestras de identidade e perfis. |
+| `CREATE SCHEMA IF NOT EXISTS colaboradores;` | **colaboradores**: Detalhes específicos de Transportadores, Sucateiros, Lojistas e Catadores. |
+| `CREATE SCHEMA IF NOT EXISTS clientes;` | **clientes**: Detalhes e pedidos de coleta dos clientes. |
+| `CREATE SCHEMA IF NOT EXISTS logistica;` | **logistica**: Gestão de Ordens de Serviço, Fretes e Leilões. |
+| `CREATE SCHEMA IF NOT EXISTS inventario;` | **inventario**: Controlo de stock de materiais. |
+| `CREATE SCHEMA IF NOT EXISTS social;` | **social**: Funcionalidades de interação (avaliações, comentários, seguidores). |
+| `CREATE SCHEMA IF NOT EXISTS marketplace;` | **marketplace**: Venda e Doação de produtos. |
+
+### 2. TIPO DE DADOS PERSONALIZADO (ENUM)
+
+Criação de um tipo enumerado para padronizar e restringir os valores de *status* numa coluna.
+
+| Tipo de Dado | Definição | Tabela de Utilização |
+| :--- | :--- | :--- |
+| [cite_start]`logistica.status_servico` [cite: 4] | Define o ciclo de vida de uma Ordem de Serviço de Logística. | [cite_start]`logistica.ordens_servico` [cite: 4] |
+| [cite_start]**Valores ENUM** [cite: 4] | `'PENDENTE'`, `'CONFIRMADO'`, `'COLETADO'`, `'EM_TRANSPORTE'`, `'ENTREGUE'`, `'CANCELADO'` | |
+
+---
+
+### 3. SCHEMA `core`: Identidades e Perfis M:M (Tabelas MESTRAS)
+
+Este é o módulo central, que regista todas as pessoas que interagem com o sistema.
+
+#### Tabela: `core.pessoas`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 5] | `BIGSERIAL` | **Chave Primária**. Identificador único para cada pessoa. |
+| [cite_start]`nome` [cite: 5] | `VARCHAR(255)` | Nome completo. `NOT NULL`. |
+| [cite_start]`documento` [cite: 5] | `VARCHAR(18)` | CPF ou CNPJ. **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`email` [cite: 5] | `VARCHAR(100)` | Endereço de e-mail. **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`telefone` [cite: 5] | `VARCHAR(20)` | Telefone de contato. |
+| [cite_start]`data_cadastro` [cite: 5] | `TIMESTAMP WITHOUT TIME ZONE` | Data e hora do registo. `DEFAULT now()`. |
+| [cite_start]`ativo` [cite: 5] | `BOOLEAN` | Indica se a conta está ativa. `DEFAULT true`. `NOT NULL`. |
+| [cite_start]`is_colaborador` [cite: 5] | `BOOLEAN` | Sinaliza se a pessoa tem um perfil de colaborador (Transportador, Sucateiro, etc.). `DEFAULT false`. `NOT NULL`. |
+| [cite_start]`is_cliente` [cite: 6] | `BOOLEAN` | Sinaliza se a pessoa tem um perfil de cliente. `DEFAULT false`. `NOT NULL`. |
+
+#### Tabela: `core.perfis`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`perfil_id` [cite: 6] | `SERIAL` | **Chave Primária**. Identificador do perfil (Ex: 'Administrador', 'Financeiro'). |
+| [cite_start]`nome_perfil` [cite: 6] | `VARCHAR(50)` | Nome do perfil. **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`descricao` [cite: 6] | `TEXT` | Descrição detalhada da função/permissões do perfil. |
+
+#### Tabela: `core.pessoa_perfil`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 7] | `BIGINT` | **Chave Primária Composta**. Chave Estrangeira (`FK`) para `core.pessoas`. `ON DELETE CASCADE`. |
+| [cite_start]`perfil_id` [cite: 7] | `INTEGER` | **Chave Primária Composta**. Chave Estrangeira (`FK`) para `core.perfis`. `ON DELETE RESTRICT`. |
+
+#### Tabela: `core.contas_digitais`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 8] | `BIGINT` | **Chave Primária**. Chave Estrangeira (`FK`) para `core.pessoas`. Liga a pessoa ao sistema *FinTech*. `ON DELETE CASCADE`. |
+| [cite_start]`conta_uuid` [cite: 8] | `VARCHAR(64)` | UUID da conta no sistema financeiro externo. **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`status_kyc` [cite: 8] | `VARCHAR(20)` | *Status* de verificação do usuário (Ex: 'APROVADO', 'PENDENTE'). `DEFAULT 'PENDENTE'`. `NOT NULL`. |
+| [cite_start]`data_abertura` [cite: 8] | `TIMESTAMP WITHOUT TIME ZONE` | Data de abertura da conta digital. `DEFAULT now()`. |
+
+---
+
+### 4. SCHEMAS ESPECÍFICOS DE `colaboradores`
+
+Estas tabelas estendem a informação da tabela `core.pessoas`, sendo a `pessoa_id` a chave de ligação.
+
+#### Tabela: `colaboradores.transportadores`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 9] | `BIGINT` | **Chave Primária**. FK para `core.pessoas`. Detalhes do Transportador. `ON DELETE CASCADE`. |
+| [cite_start]`licenca_transporte` [cite: 9] | `VARCHAR(100)` | Número da licença de transporte. |
+
+#### Tabela: `colaboradores.sucateiros`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 10] | `BIGINT` | **Chave Primária**. FK para `core.pessoas`. Detalhes do Sucateiro. `ON DELETE CASCADE`. |
+| [cite_start]`razao_social` [cite: 10] | `VARCHAR(255)` | Nome legal da empresa. `NOT NULL`. |
+| [cite_start]`cnpj_secundario` [cite: 10] | `VARCHAR(18)` | CNPJ secundário ou filiais. |
+| [cite_start]`licenca_ambiental` [cite: 10] | `VARCHAR(100)` | Licença ambiental de operação. |
+| [cite_start]`endereco_patio` [cite: 10] | `TEXT` | Endereço do pátio de sucata/armazenagem. `NOT NULL`. |
+
+#### Tabela: `colaboradores.lojistas`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 11] | `BIGINT` | **Chave Primária**. FK para `core.pessoas`. Detalhes do Lojista. `ON DELETE CASCADE`. |
+| [cite_start]`nome_loja` [cite: 11] | `VARCHAR(255)` | Nome da loja ou ponto de coleta. `NOT NULL`. |
+| [cite_start]`endereco_coleta` [cite: 11] | `TEXT` | Endereço principal de coleta. `NOT NULL`. |
+| [cite_start]`horario_atendimento` [cite: 11] | `VARCHAR(100)` | Horário de funcionamento/coleta. |
+
+#### Tabela: `colaboradores.catadores`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 12] | `BIGINT` | **Chave Primária**. FK para `core.pessoas`. Detalhes do Catador. `ON DELETE CASCADE`. |
+| [cite_start]`data_nascimento` [cite: 12] | `DATE` | Data de nascimento. |
+| [cite_start]`associacao_id` [cite: 12] | `INTEGER` | Identificador de uma possível futura tabela de associações. |
+| [cite_start]`area_atuacao_geografica` [cite: 12] | `TEXT` | Descrição da área onde atua. |
+
+#### Tabela: `colaboradores.veiculos`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`veiculo_id` [cite: 13] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`transportador_pessoa_id` [cite: 13] | `BIGINT` | FK para `colaboradores.transportadores`. Liga o veículo ao seu responsável. `ON DELETE CASCADE`. `NOT NULL`. |
+| [cite_start]`matricula` [cite: 13] | `VARCHAR(20)` | Placa/Matrícula do veículo. **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`tipo_veiculo` [cite: 13] | `VARCHAR(50)` | Ex: 'Caminhão', 'Fiorino', 'Moto'. `NOT NULL`. |
+| [cite_start]`capacidade_peso_kg` [cite: 13] | `NUMERIC(10, 2)` | Capacidade máxima de peso em quilogramas. `NOT NULL`. |
+| [cite_start]`capacidade_volume_m3` [cite: 13] | `NUMERIC(10, 2)` | Capacidade máxima de volume em metros cúbicos. |
+| [cite_start]`status_veiculo` [cite: 13] | `VARCHAR(20)` | *Status* operacional do veículo. `DEFAULT 'ATIVO'`. `NOT NULL`. |
+
+---
+
+### 5. SCHEMA `clientes`
+
+Detalhes e registo dos pedidos de coleta feitos pelos clientes.
+
+#### Tabela: `clientes.detalhes`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pessoa_id` [cite: 14] | `BIGINT` | **Chave Primária**. FK para `core.pessoas`. Detalhes do Cliente. `ON DELETE CASCADE`. |
+| [cite_start]`tipo_cliente` [cite: 14] | `VARCHAR(20)` | Classificação do cliente (Ex: 'PJ', 'PF'). `NOT NULL`. |
+| [cite_start]`preferencias_coleta` [cite: 14] | `TEXT` | Notas sobre horários ou métodos de coleta preferidos. |
+
+#### Tabela: `clientes.pedidos_coleta`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`pedido_id` [cite: 15] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`cliente_id` [cite: 15] | `BIGINT` | FK para `clientes.detalhes`. Quem fez o pedido. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`descricao_pedido` [cite: 15] | `TEXT` | Descrição do material a ser coletado. `NOT NULL`. |
+| [cite_start]`data_solicitacao` [cite: 15] | `TIMESTAMP WITH TIME ZONE` | Momento em que o pedido foi criado. `DEFAULT CURRENT_TIMESTAMP`. |
+
+---
+
+### 6. SCHEMA `logistica` (Fluxo de Fretes e CÁLCULOS ANTT)
+
+Gerenciamento das movimentações de materiais, desde a ordem de serviço até o frete e lances de leilão.
+
+#### Tabela: `logistica.modalidades_frete`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`modalidade_id` [cite: 16] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`nome_modalidade` [cite: 16] | `VARCHAR(50)` | Ex: 'Lotação', 'Fracionada', 'Urgente'. **Único** (`UNIQUE`). `NOT NULL`. |
+
+#### Tabela: `logistica.status_leilao`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`status_id` [cite: 17] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`nome_status` [cite: 17] | `VARCHAR(50)` | Ex: 'ABERTO', 'ENCERRADO', 'NEGOCIACAO'. **Único** (`UNIQUE`). `NOT NULL`. |
+
+#### Tabela: `logistica.antt_parametros`
+
+Armazena valores dinâmicos para o cálculo do frete, seguindo a legislação da Agência Nacional de Transportes Terrestres (ANTT).
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`parametro_id` [cite: 18] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`chave` [cite: 18] | `VARCHAR(100)` | Nome do parâmetro (Ex: 'C_KM', 'C_EIXO_2'). **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`valor` [cite: 18] | `NUMERIC(10, 4)` | Valor do parâmetro. `NOT NULL`. |
+| [cite_start]`descricao` [cite: 18] | `TEXT` | Descrição do parâmetro ANTT. |
+| [cite_start]`data_vigencia` [cite: 18] | `DATE` | Data de início da vigência do valor. `DEFAULT now()`. |
+
+#### Tabela: `logistica.ordens_servico`
+
+Representa a solicitação de um frete ou serviço de coleta/entrega.
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`ordem_id` [cite: 19] | `BIGSERIAL` | **Chave Primária**. |
+| [cite_start]`cliente_solicitante_id` [cite: 19] | `BIGINT` | FK para `clientes.detalhes`. O cliente que pediu o serviço. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`transportador_designado_id` [cite: 19] | `BIGINT` | FK para `colaboradores.transportadores`. O transportador escolhido. `ON DELETE SET NULL`. |
+| [cite_start]`data_solicitacao` [cite: 19] | `TIMESTAMP WITHOUT TIME ZONE` | Data da criação da Ordem. `DEFAULT now()`. |
+| [cite_start]`data_prevista_coleta` [cite: 19] | `DATE` | Data agendada para coleta. |
+| [cite_start]`endereco_coleta` [cite: 19] | `TEXT` | Endereço completo de onde o material será coletado. `NOT NULL`. |
+| [cite_start]`cep_coleta` [cite: 19] | `VARCHAR(8)` | **CEP de Origem**. `NOT NULL`. |
+| [cite_start]`cep_destino` [cite: 19] | `VARCHAR(8)` | **CEP de Destino** (Sucateiro ou Loja). `NOT NULL`. |
+| [cite_start]`status` [cite: 20] | `logistica.status_servico` | *Status* da Ordem (usa o ENUM criado). `DEFAULT 'PENDENTE'`. `NOT NULL`. |
+
+#### Tabela: `logistica.fretes`
+
+Detalhamento financeiro e logístico de uma Ordem de Serviço, com foco no leilão e precificação.
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`frete_id` [cite: 21] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`ordem_servico_id` [cite: 21] | `BIGINT` | FK para `logistica.ordens_servico`. Um frete é um detalhe de uma Ordem. `ON DELETE CASCADE`. `NOT NULL`. |
+| [cite_start]`modalidade_id` [cite: 21] | `INTEGER` | FK para `logistica.modalidades_frete`. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`status_leilao_id` [cite: 21] | `INTEGER` | FK para `logistica.status_leilao`. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`data_expiracao_negociacao` [cite: 21] | `TIMESTAMP WITH TIME ZONE` | Prazo final para receber lances. |
+| [cite_start]`preco_sugerido` [cite: 21] | `NUMERIC(10, 2)` | Preço que o sistema sugere pagar. |
+| [cite_start]`antt_piso_minimo` [cite: 21] | `NUMERIC(10, 2)` | Valor mínimo legal que pode ser pago. |
+| [cite_start]`custo_base_mercado` [cite: 21] | `NUMERIC(10, 2)` | Cotação de referência de mercado. |
+| [cite_start]`distancia_km` [cite: 22] | `NUMERIC(10, 2)` | Distância rodoviária calculada. |
+| [cite_start]`transportador_selecionado_id` [cite: 22] | `BIGINT` | FK para `colaboradores.transportadores`. O transportador que ganhou o leilão. `ON DELETE SET NULL`. |
+
+#### Tabela: `logistica.itens_frete`
+
+Detalha os materiais transportados em um frete específico.
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`item_frete_id` [cite: 23] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`frete_id` [cite: 23] | `INTEGER` | FK para `logistica.fretes`. `ON DELETE CASCADE`. `NOT NULL`. |
+| [cite_start]`descricao` [cite: 23] | `TEXT` | Descrição do item (Ex: 'Garrafas PET'). `NOT NULL`. |
+| [cite_start]`tipo_material` [cite: 23] | `VARCHAR(100)` | Classificação do material (Ex: 'Plástico', 'Vidro'). |
+| [cite_start]`peso_estimado_kg` [cite: 23] | `NUMERIC(10, 2)` | Peso estimado do item em kg. `NOT NULL`. |
+| [cite_start]`volume_estimado_m3` [cite: 23] | `NUMERIC(10, 2)` | Volume estimado do item em m³. |
+
+#### Tabela: `logistica.lances`
+
+Registo dos lances feitos pelos transportadores para um frete em leilão.
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`lance_id` [cite: 24] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`frete_id` [cite: 24] | `INTEGER` | FK para `logistica.fretes`. `ON DELETE CASCADE`. `NOT NULL`. |
+| [cite_start]`transportador_id` [cite: 24] | `BIGINT` | FK para `colaboradores.transportadores`. Quem fez o lance. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`valor_lance` [cite: 24] | `NUMERIC(10, 2)` | O valor proposto pelo transportador. `NOT NULL`. |
+| [cite_start]`data_lance` [cite: 24] | `TIMESTAMP WITH TIME ZONE` | Momento em que o lance foi registado. `DEFAULT CURRENT_TIMESTAMP`. |
+| [cite_start]`is_vencedor` [cite: 24] | `BOOLEAN` | Indica se este lance foi o selecionado. `DEFAULT false`. |
+| [cite_start]`motivo_cancelamento` [cite: 24] | `TEXT` | Justificativa se o lance foi cancelado. |
+
+#### Tabela: `logistica.cotacoes_materiais`
+
+Cotação de preço de mercado para os materiais recicláveis.
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`cotacao_id` [cite: 25] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`material_nome` [cite: 25] | `VARCHAR(100)` | Nome do material (Ex: 'Alumínio', 'PET'). **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`preco_medio_kg` [cite: 25] | `NUMERIC(10, 2)` | Preço médio por quilograma. `NOT NULL`. |
+| [cite_start]`unidade_medida` [cite: 25] | `VARCHAR(10)` | Unidade utilizada. `DEFAULT 'KG'`. `NOT NULL`. |
+| [cite_start]`data_atualizacao` [cite: 25] | `TIMESTAMP WITH TIME ZONE` | Última atualização da cotação. `DEFAULT CURRENT_TIMESTAMP`. |
+
+---
+
+### 7. SCHEMA `marketplace`
+
+Gestão de produtos para venda ou doação, incluindo categorias.
+
+#### Tabela: `marketplace.categorias`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`categoria_id` [cite: 26] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`nome_categoria` [cite: 26] | `VARCHAR(100)` | Nome da categoria (Ex: 'Eletrónicos', 'Móveis'). **Único** (`UNIQUE`). `NOT NULL`. |
+| [cite_start]`tipo_geral` [cite: 26] | `VARCHAR(20)` | Classificação ampla (Ex: 'Venda', 'Serviço'). `NOT NULL`. |
+
+#### Tabela: `marketplace.produtos`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`produto_id` [cite: 27] | `SERIAL` | **Chave Primária**. |
+| [cite_start]`vendedor_id` [cite: 27] | `BIGINT` | FK para `core.pessoas`. O vendedor/doador. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`categoria_id` [cite: 27] | `INTEGER` | FK para `marketplace.categorias`. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`titulo` [cite: 27] | `VARCHAR(255)` | Título do anúncio. `NOT NULL`. |
+| [cite_start]`descricao` [cite: 27] | `TEXT` | Descrição detalhada do produto. |
+| [cite_start]`preco` [cite: 27] | `NUMERIC(10, 2)` | Preço de venda. `NOT NULL`. |
+| [cite_start]`quantidade` [cite: 27] | `INTEGER` | Quantidade disponível. `DEFAULT 1`. `NOT NULL`. |
+| [cite_start]`unidade_medida` [cite: 27] | `VARCHAR(10)` | Unidade (Ex: 'UN', 'KG'). `DEFAULT 'UN'`. |
+| [cite_start]`data_publicacao` [cite: 27] | `TIMESTAMP WITH TIME ZONE` | Momento da publicação. `DEFAULT CURRENT_TIMESTAMP`. |
+| [cite_start]`is_disponivel` [cite: 27] | `BOOLEAN` | Disponibilidade do item. `DEFAULT true`. `NOT NULL`. |
+| [cite_start]`is_doacao` [cite: 27] | `BOOLEAN` | Indica se o item é uma doação. `DEFAULT false`. `NOT NULL`. |
+| [cite_start]**Restrição** [cite: 28] | `check_preco_doacao` | Garante que se `is_doacao = TRUE`, o `preco` deve ser `0.00`. Se `is_doacao = FALSE`, o `preco` deve ser maior que `0.00`. |
+
+---
+
+### 8. SCHEMA `inventario`
+
+Controlo de estoque de materiais, tipicamente em um pátio de sucateiro.
+
+#### Tabela: `inventario.estoque`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`estoque_id` [cite: 29] | `BIGSERIAL` | **Chave Primária**. |
+| [cite_start]`gestor_id` [cite: 29] | `BIGINT` | FK para `core.pessoas`. O responsável pela gestão do estoque. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`tipo_material` [cite: 29] | `VARCHAR(50)` | Tipo de material em estoque (Ex: 'Cobre', 'Plástico PET'). `NOT NULL`. |
+| [cite_start]`quantidade_kg` [cite: 29] | `NUMERIC(10, 2)` | Quantidade em quilogramas. `NOT NULL`. |
+| [cite_start]`data_entrada` [cite: 29] | `TIMESTAMP WITHOUT TIME ZONE` | Data da entrada no estoque. `DEFAULT now()`. |
+| [cite_start]`localizacao` [cite: 29] | `TEXT` | Localização física no pátio. |
+
+---
+
+### 9. SCHEMA `social`
+
+Funcionalidades de interação social e *feedback* de usuários.
+
+#### Tabela: `social.avaliacoes`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`avaliacao_id` [cite: 30] | `BIGSERIAL` | **Chave Primária**. |
+| [cite_start]`avaliador_id` [cite: 30] | `BIGINT` | FK para `core.pessoas`. Quem avaliou. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`avaliado_id` [cite: 30] | `BIGINT` | FK para `core.pessoas`. Quem foi avaliado (Ex: um Transportador, um Vendedor). `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`ordem_servico_id` [cite: 30] | `BIGINT` | FK para `logistica.ordens_servico`. Avaliação de um serviço. `ON DELETE SET NULL`. |
+| [cite_start]`produto_id` [cite: 30] | `INTEGER` | FK para `marketplace.produtos`. Avaliação de um produto. `ON DELETE SET NULL`. |
+| [cite_start]`pontuacao` [cite: 30] | `SMALLINT` | Nota de 1 a 5. `NOT NULL`. |
+| [cite_start]`comentario` [cite: 30] | `TEXT` | Comentário escrito. |
+| [cite_start]`data_avaliacao` [cite: 30] | `TIMESTAMP WITH TIME ZONE` | Data e hora da avaliação. `DEFAULT CURRENT_TIMESTAMP`. |
+| [cite_start]**Restrição** [cite: 31] | `check_related_entity` | Garante que cada avaliação se refere a uma `ordem_servico` **OU** um `produto`, mas não a ambos. |
+
+#### Tabela: `social.comentarios`
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`comentario_id` [cite: 32] | `BIGSERIAL` | **Chave Primária**. |
+| [cite_start]`autor_id` [cite: 32] | `BIGINT` | FK para `core.pessoas`. Quem escreveu. `ON DELETE RESTRICT`. `NOT NULL`. |
+| [cite_start]`produto_id` [cite: 32] | `INTEGER` | FK para `marketplace.produtos`. O comentário está sempre ligado a um produto. `ON DELETE CASCADE`. `NOT NULL`. |
+| [cite_start]`texto_comentario` [cite: 32] | `TEXT` | Conteúdo do comentário. `NOT NULL`. |
+| [cite_start]`data_comentario` [cite: 32] | `TIMESTAMP WITH TIME ZONE` | Momento em que foi feito. `DEFAULT CURRENT_TIMESTAMP`. |
+| [cite_start]`comentario_pai_id` [cite: 32] | `BIGINT` | FK auto-referente para `social.comentarios`. Permite respostas (*replies*). `ON DELETE SET NULL`. |
+
+#### Tabela: `social.seguidores`
+
+Funcionalidade de seguir entre usuários.
+
+| Coluna | Tipo de Dados | Restrições/Descrição |
+| :--- | :--- | :--- |
+| [cite_start]`seguidor_id` [cite: 33] | `BIGINT` | **Chave Primária Composta**. FK para `core.pessoas`. Quem segue. `ON DELETE CASCADE`. |
+| [cite_start]`seguido_id` [cite: 33] | `BIGINT` | **Chave Primária Composta**. FK para `core.pessoas`. Quem é seguido. `ON DELETE CASCADE`. |
+| [cite_start]**Restrição** [cite: 33] | `check_self_follow` | Impede que o `seguidor_id` seja igual ao `seguido_id` (auto-seguimento). |
+
+Espero que esta documentação detalhada seja útil para a sua implementação e gestão da base de dados! Se tiver alguma dúvida ou precisar de mais detalhes sobre alguma parte, é só dizer!

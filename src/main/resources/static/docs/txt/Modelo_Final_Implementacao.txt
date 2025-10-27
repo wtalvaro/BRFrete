@@ -1,0 +1,393 @@
+Que excelente projeto de modelo de dados\! Ficarei muito contente em ajudar a delinear a estrutura de um projeto Spring Boot para esta base de dados. [cite\_start]O Spring Boot é ideal para construir APIs REST que interagem com um modelo tão organizado[cite: 1, 2, 3].
+
+O nosso objetivo é mapear os seus esquemas de banco de dados (`core`, `colaboradores`, `clientes`, `logistica`, `marketplace`, `inventario`, `social`) para uma arquitetura modular de Spring Boot.
+
+### 1\. Compreensão do Objetivo: Mapeamento de Arquitetura
+
+[cite\_start]O modelo de dados que me forneceu é extenso e bem dividido em **esquemas** (`schemas`)[cite: 1, 2, 3]. A melhor prática em Spring Boot (e microserviços/monolitos modulares) é criar **pacotes** (ou módulos, se for maior) que correspondam a estes esquemas.
+
+Isto permite:
+
+1.  **Organização:** O código relacionado a `core.pessoas` estará no pacote `core`.
+2.  **Manutenibilidade:** Alterações em `logistica` não afetam diretamente o código de `inventario`.
+3.  **Clareza:** A estrutura do código reflete a estrutura da base de dados.
+
+**Perguntas de Esclarecimento:**
+
+1.  **Monolito ou Microsserviços?** O seu modelo sugere uma plataforma unificada. Para começar, assumiremos um **Monolito Modular** (uma única aplicação Spring Boot, mas com a lógica de negócio separada por pacotes/módulos, seguindo os esquemas).
+2.  **Tecnologia de Acesso a Dados:** Vamos usar o **Spring Data JPA** (com Hibernate) para a persistência.
+
+### 2\. Panorama Geral da Solução: Arquitetura em Camadas
+
+A arquitetura de software mais comum e robusta em Spring Boot é a **Arquitetura em Camadas (Layered Architecture)**. Vamos aplicá-la a cada "módulo de esquema" (e.g., `core`, `logistica`).
+
+| Camada (Layer) | Responsabilidade | Tecnologias Chave |
+| :--- | :--- | :--- |
+| **Controller** (Web) | Receber pedidos HTTP, chamar a camada de Serviço e devolver a resposta. | `@RestController`, `@RequestMapping` |
+| **Service** (Negócio) | Contém a lógica de negócio principal (regras de validação, coordenação de transações, etc.). | `@Service`, `@Transactional` |
+| **Repository** (Dados) | Comunicação direta com a base de dados (CRUD). | `JpaRepository`, `@Repository` |
+| **Model/Entity** | Mapeamento dos objetos da base de dados (as suas tabelas). | `@Entity`, `@Table` |
+| **DTO** (Opcional) | Objetos de Transferência de Dados, para entrada e saída de dados via HTTP (separação do Model). | Classes Simples |
+
+### 3\. Estrutura do Projeto Spring Boot (Modelo Modular)
+
+Abaixo está como a estrutura de diretórios e pacotes Java se pareceria, refletindo os seus esquemas:
+
+```
+src/main/java/
+└── com.seuprojeto.plataforma (Pacote Raiz)
+    ├── config                     # Configurações globais (Segurança, CORS, etc.)
+    ├── utils                      # Classes utilitárias
+    [cite_start]├── core                       # Mapeia o SCHEMA "core" [cite: 1]
+    │   ├── controller
+    [cite_start]│   ├── entity                 # core.pessoas, core.perfis, core.pessoa_perfil, core.contas_digitais [cite: 5, 6, 7, 8]
+    │   ├── repository
+    │   └── service
+    [cite_start]├── colaboradores              # Mapeia o SCHEMA "colaboradores" [cite: 1]
+    │   ├── controller
+    [cite_start]│   ├── entity                 # colaboradores.transportadores, colaboradores.sucateiros, etc. [cite: 9, 10, 11, 12, 13]
+    │   ├── repository
+    │   └── service
+    [cite_start]├── clientes                   # Mapeia o SCHEMA "clientes" [cite: 2]
+    │   ├── controller
+    [cite_start]│   ├── entity                 # clientes.detalhes, clientes.pedidos_coleta [cite: 14, 15]
+    │   ├── repository
+    │   └── service
+    [cite_start]├── logistica                  # Mapeia o SCHEMA "logistica" [cite: 2]
+    │   ├── controller
+    [cite_start]│   ├── entity                 # logistica.ordens_servico, logistica.fretes, etc. [cite: 19, 21]
+    │   ├── repository
+    │   └── service
+    [cite_start]├── marketplace                # Mapeia o SCHEMA "marketplace" [cite: 3]
+    │   ├── controller
+    [cite_start]│   ├── entity                 # marketplace.produtos, marketplace.categorias [cite: 27]
+    │   ├── repository
+    │   └── service
+    [cite_start]├── inventario                 # Mapeia o SCHEMA "inventario" [cite: 2]
+    [cite_start]│   ├── entity                 # inventario.estoque [cite: 29]
+    │   ├── repository
+    │   └── service
+    [cite_start]└── social                     # Mapeia o SCHEMA "social" [cite: 3]
+        [cite_start]├── entity                 # social.avaliacoes, social.comentarios, social.seguidores [cite: 30, 32, 33]
+        ├── repository
+        └── service
+```
+
+### 4\. Exemplo de Implementação (Entidade Core: `Pessoa`)
+
+Para ilustrar, veja como a tabela `core.pessoas` seria mapeada para uma Entidade JPA.
+
+#### 4.1. Entity (core.entity.Pessoa.java)
+
+[cite\_start]Este é o **Model**, mapeando a tabela `core.pessoas`[cite: 5].
+
+```java
+// src/main/java/com/seuprojeto/plataforma/core/entity/Pessoa.java
+
+package com.seuprojeto.plataforma.core.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+// Mapeia para a tabela "pessoas" no SCHEMA "core"
+@Entity
+@Table(name = "pessoas", schema = "core")
+public class Pessoa {
+
+    [cite_start]// pessoa_id BIGSERIAL PRIMARY KEY [cite: 5]
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long pessoaId;
+
+    [cite_start]// nome VARCHAR(255) NOT NULL [cite: 5]
+    @Column(nullable = false)
+    private String nome;
+
+    [cite_start]// documento VARCHAR(18) UNIQUE NOT NULL [cite: 5]
+    @Column(unique = true, nullable = false, length = 18)
+    private String documento;
+
+    [cite_start]// email VARCHAR(100) UNIQUE NOT NULL [cite: 5]
+    @Column(unique = true, nullable = false, length = 100)
+    private String email;
+
+    [cite_start]// data_cadastro TIMESTAMP WITHOUT TIME ZONE DEFAULT now() [cite: 5]
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime dataCadastro;
+
+    // Outros campos...
+    private String telefone;
+    private Boolean ativo = true;
+    private Boolean isColaborador = false; [cite_start]// is_colaborador [cite: 5]
+    private Boolean isCliente = false; [cite_start]// is_cliente [cite: 6]
+
+    // Construtores, Getters e Setters (omitidos para brevidade)
+}
+```
+
+#### 4.2. Repository (core.repository.PessoaRepository.java)
+
+Esta interface é usada para aceder à base de dados. O Spring Data JPA cria as implementações automaticamente.
+
+```java
+// src/main/java/com/seuprojeto/plataforma/core/repository/PessoaRepository.java
+
+package com.seuprojeto.plataforma.core.repository;
+
+import com.seuprojeto.plataforma.core.entity.Pessoa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
+
+    // Exemplo de método personalizado: Encontrar uma Pessoa pelo seu documento
+    Pessoa findByDocumento(String documento);
+}
+```
+
+#### 4.3. Service (core.service.PessoaService.java)
+
+Aqui estará a lógica de negócio, como por exemplo, verificar se um documento já existe antes de salvar.
+
+```java
+// src/main/java/com/seuprojeto/plataforma/core/service/PessoaService.java
+
+package com.seuprojeto.plataforma.core.service;
+
+import com.seuprojeto.plataforma.core.entity.Pessoa;
+import com.seuprojeto.plataforma.core.repository.PessoaRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class PessoaService {
+
+    private final PessoaRepository pessoaRepository;
+
+    public PessoaService(PessoaRepository pessoaRepository) {
+        this.pessoaRepository = pessoaRepository;
+    }
+
+    @Transactional
+    public Pessoa criarNovaPessoa(Pessoa novaPessoa) {
+        // Lógica de negócio: Verificar unicidade ou formatação
+        if (pessoaRepository.findByDocumento(novaPessoa.getDocumento()) != null) {
+            throw new IllegalArgumentException("Documento já cadastrado.");
+        }
+
+        // Assegurar que os defaults estão corretos antes de salvar
+        if (novaPessoa.getDataCadastro() == null) {
+            novaPessoa.setDataCadastro(LocalDateTime.now());
+        }
+
+        return pessoaRepository.save(novaPessoa);
+    }
+}
+```
+
+#### 4.4. Controller (core.controller.PessoaController.java)
+
+O ponto de entrada para pedidos HTTP.
+
+```java
+// src/main/java/com/seuprojeto/plataforma/core/controller/PessoaController.java
+
+package com.seuprojeto.plataforma.core.controller;
+
+import com.seuprojeto.plataforma.core.entity.Pessoa;
+import com.seuprojeto.plataforma.core.service.PessoaService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/core/pessoas") // Exemplo de Endpoint
+public class PessoaController {
+
+    private final PessoaService pessoaService;
+
+    public PessoaController(PessoaService pessoaService) {
+        this.pessoaService = pessoaService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Pessoa> cadastrarPessoa(@RequestBody Pessoa pessoa) {
+        try {
+            Pessoa pessoaSalva = pessoaService.criarNovaPessoa(pessoa);
+            return new ResponseEntity<>(pessoaSalva, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Outros métodos: GET, PUT, DELETE...
+}
+```
+
+### 5\. Documentação e Implementação
+
+**Raciocínio:**
+
+  * A estrutura de pacotes espelha os seus esquemas de BD (`core`, `colaboradores`, `logistica`), garantindo um código limpo e modular.
+  * O uso de `@Table(name = "tabela_a", schema = "esquema_b")` é crucial para dizer ao Spring Data JPA onde encontrar cada tabela no seu banco de dados PostgreSQL.
+  * A aplicação da Arquitetura em Camadas (Controller -\> Service -\> Repository) assegura a separação de preocupações (HTTP, Lógica de Negócio, Acesso a Dados).
+
+**Instruções de Implementação:**
+
+1.  **Criação do Projeto:** Use o Spring Initializr para criar um projeto Maven ou Gradle com as dependências `Spring Web`, `Spring Data JPA` e a dependência do seu banco de dados (provavelmente `PostgreSQL Driver`).
+2.  **Estrutura de Pacotes:** Crie a estrutura de pacotes conforme o diagrama do **Ponto 3**.
+3.  [cite\_start]**Entidades:** Para cada tabela nos seus esquemas (`core.pessoas`, `logistica.ordens_servico`, etc. [cite: 5, 19]), crie uma classe na pasta `entity` correspondente, utilizando `@Entity`, `@Table(name="...", schema="...")` e `@Id`.
+      * [cite\_start]**Dica para ENUM:** Para o tipo `logistica.status_servico` [cite: 4][cite\_start], crie um `enum` Java e mapeie-o usando o `@Enumerated` em sua entidade `logistica.ordens_servico`[cite: 19].
+4.  **Repositórios:** Para cada Entidade, crie uma interface `JpaRepository` correspondente na pasta `repository`.
+5.  **Serviços e Controladores:** Implemente a lógica de negócio em `service` e os endpoints REST em `controller`.
+
+Ficou claro? [cite\_start]Qual esquema ou tabela gostaria de ver mais um exemplo (por exemplo, a tabela `logistica.ordens_servico` que usa o ENUM `logistica.status_servico` [cite: 4, 19])?
+
+Excelente ideia\! É perfeitamente possível e muito comum manter a **API REST (JSON)** e as **páginas web renderizadas no servidor (HTML)** no mesmo projeto Spring Boot.
+
+Esta abordagem permite-lhe usar:
+
+1.  **`@RestController`:** Para os seus *endpoints* de dados (JSON) que seriam consumidos por aplicações externas, por JavaScript na sua própria aplicação, ou futuramente por um *frontend* separado.
+2.  **`@Controller` + Thymeleaf:** Para os *endpoints* que devolvem páginas HTML (a sua parte *frontend*).
+
+Vou mostrar como estruturar isso, focando na separação de pacotes e no mapeamento de URLs para evitar conflitos.
+
+### 1\. Instruções para o Projeto Híbrido (API + Web)
+
+#### Passo 1: Adicionar a Dependência do Motor de Templates
+
+Como conversámos, o primeiro passo é garantir que o Spring Boot saiba como renderizar HTML. Vamos usar o **Thymeleaf**.
+
+**No seu `pom.xml` (Maven) ou `build.gradle` (Gradle), certifique-se de que tem:**
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+```
+
+#### Passo 2: Estrutura de Pacotes e Mapeamento de URLs
+
+Manter a clareza é crucial. Vamos criar dois sub-pacotes dentro de cada módulo (`core`, `logistica`, etc.) e definir um padrão de URL claro:
+
+| Tipo de Serviço | Anotação | Mapeamento de URL | Pacote (Exemplo em `core`) |
+| :--- | :--- | :--- | :--- |
+| **API de Dados** | `@RestController` | `/api/v1/...` | `com.seuprojeto.core.api` |
+| **Páginas Web** | `@Controller` | `/app/...` ou `/web/...` | `com.seuprojeto.core.web` |
+
+**Nova Estrutura (Exemplo para `core`):**
+
+```
+└── com.seuprojeto.plataforma
+    ├── core
+    │   ├── api              # Controladores JSON (com @RestController)
+    │   ├── web              # Controladores HTML (com @Controller)
+    │   ├── entity
+    │   ├── repository
+    │   └── service
+    ... (Outros schemas)
+```
+
+#### Passo 3: Localização dos Ficheiros HTML
+
+Mantenha a localização padrão do Spring Boot para os templates:
+
+```
+src/main/resources/
+└── templates/
+    └── core/
+        ├── lista-pessoas.html    <-- Ficheiro HTML do CORE
+        └── form-pessoa.html      <-- Outro Ficheiro HTML do CORE
+    └── logistica/
+        └── painel-fretes.html    <-- Ficheiro HTML de LOGISTICA
+```
+
+### 2\. Implementação Exemplo (Módulo `core`)
+
+Vamos supor que o seu `PessoaService` (que já criámos) e o `PessoaRepository` continuam os mesmos.
+
+#### 2.1. Controller da API (JSON)
+
+Este controlador **não muda** e continua a devolver dados.
+
+```java
+// src/main/java/com/seuprojeto/core/api/PessoaApiController.java
+
+package com.seuprojeto.core.api;
+
+import com.seuprojeto.core.entity.Pessoa;
+import com.seuprojeto.core.service.PessoaService;
+// Importante: Usamos RestController para JSON
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/core/pessoas") // Mapeamento com prefixo /api
+public class PessoaApiController {
+
+    private final PessoaService pessoaService;
+    // ... construtor
+
+    // Devolve uma lista de Pessoas no formato JSON
+    @GetMapping
+    public List<Pessoa> getAllPessoas() {
+        return pessoaService.findAll(); // Método hipotético no Service
+    }
+}
+```
+
+#### 2.2. Controller da Página Web (HTML)
+
+Este controlador usa o `@Controller` e devolve o nome do template.
+
+```java
+// src/main/java/com/seuprojeto/core/web/PessoaWebController.java
+
+package com.seuprojeto.core.web;
+
+import com.seuprojeto.core.entity.Pessoa;
+import com.seuprojeto.core.service.PessoaService;
+// Importante: Usamos Controller para HTML
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@Controller
+@RequestMapping("/app/core/pessoas") // Mapeamento com prefixo /app ou /web
+public class PessoaWebController {
+
+    private final PessoaService pessoaService;
+    // ... construtor
+
+    // Endpoint para mostrar a página HTML com a lista de Pessoas
+    @GetMapping("/lista")
+    public String listarPessoas(Model model) {
+        // 1. Chamar a Lógica de Negócio (o mesmo service!)
+        List<Pessoa> pessoas = pessoaService.findAll();
+
+        // 2. Adicionar os dados ao "Model" para o Thymeleaf
+        model.addAttribute("listaDePessoas", pessoas);
+
+        // 3. Devolver o nome do Template (o ficheiro HTML em src/main/resources/templates/core/lista-pessoas.html)
+        return "core/lista-pessoas";
+    }
+}
+```
+
+### Resumo do Conceito
+
+Ao usar o prefixo `/api/v1` para os seus `@RestController` e `/app` ou `/web` para os seus `@Controller` (que devolvem HTML), você garante que as duas funcionalidades coexistem no mesmo projeto, usando o mesmo código de Serviço (`PessoaService`) para aceder e manipular os dados.
+
+Esta é uma solução poderosa, modular e permite-lhe, inclusive, fazer chamadas JSON (`/api/...`) a partir do JavaScript que corre nas suas páginas renderizadas (`/app/...`). É o melhor dos dois mundos\!

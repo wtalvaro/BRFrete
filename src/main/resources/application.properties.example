@@ -1,0 +1,68 @@
+# =======================================================
+# 1. CONFIGURAÇÃO BASE DA APLICAÇÃO E PERFIL
+# =======================================================
+# Define o perfil de ambiente ativo para carregar as configurações de desenvolvimento.
+spring.profiles.active=dev
+# Nome da aplicação para fins de monitorização e logging.
+spring.application.name=wta-frete-api
+# Porta HTTP na qual o servidor irá iniciar.
+server.port=8080
+# Endereço de escuta do servidor (0.0.0.0 permite acesso externo ao host).
+server.address=0.0.0.0
+
+# URL base para a aplicação, usado em redirecionamentos e callbacks (ex: ngrok).
+app.base.url=https://daxton-unbelievable-woozily.ngrok-free.dev
+
+
+# =======================================================
+# 2. CONFIGURAÇÃO DO BANCO DE DADOS (PostgreSQL)
+# =======================================================
+# URL de conexão com o banco de dados PostgreSQL.
+spring.datasource.url=jdbc:postgresql://localhost:5432/dev
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Configurações do Pool de Conexões (HikariCP)
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+
+
+# =======================================================
+# 3. CONFIGURAÇÃO DO JPA/HIBERNATE
+# =======================================================
+# Dialeto específico do PostgreSQL para otimização de queries.
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+# Política de DDL (Data Definition Language). 'none' é usado em produção/migrações.
+spring.jpa.hibernate.ddl-auto=none
+
+# Estratégia de nomenclatura para mapear classes Java para colunas SQL (CamelCase para snake_case).
+spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+
+# Configuração de Fuso Horário para consistência de datas e horas.
+spring.jpa.properties.hibernate.jdbc.time_zone=UTC
+
+
+# =======================================================
+# 4. CONFIGURAÇÃO DO REDIS
+# =======================================================
+# Endereço e porta do servidor Redis, usado tipicamente para cache ou sessões.
+spring.data.redis.host=127.0.0.1
+spring.data.redis.port=6379
+
+
+# =======================================================
+# 5. CONFIGURAÇÃO DE EMAIL (SMTP - Gmail)
+# =======================================================
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+# Credenciais para autenticação no servidor SMTP
+
+# Propriedades adicionais do SMTP
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.ssl.trust=smtp.gmail.com
+
+# Endereço de e-mail remetente padrão
+spring.mail.properties.mail.smtp.from=noreply@brfrete.com

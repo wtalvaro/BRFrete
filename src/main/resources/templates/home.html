@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da API | Projeto BRFrete</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .endpoint-card {
+            margin-bottom: 20px;
+        }
+
+        .http-post {
+            color: white;
+            background-color: #28a745;
+        }
+
+        /* Verde para POST */
+        .http-get {
+            color: white;
+            background-color: #007bff;
+        }
+
+        /* Azul para GET */
+        .badge {
+            min-width: 60px;
+            text-align: center;
+        }
+
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: #d63384;
+            /* Cor para código */
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-code-slash me-2"></i> Documentação da API
+            </a>
+            <span class="navbar-text text-light ms-auto">
+                Projeto BRFrete
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+
+        <h1 class="mb-4 text-primary">Documentação Geral</h1>
+
+        <div class="alert alert-info shadow-sm mb-5" role="alert">
+            <h5 class="alert-heading">URL Base da API:</h5>
+            <code th:text="${baseUrl ?: 'http://localhost:8080'}">http://localhost:8080</code>
+            <p class="mb-0 mt-2"><small>Todos os caminhos de endpoint são relativos a este URL base.</small></p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="card shadow border-0" style="border-left: 5px solid #ffc107 !important;">
+                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center">
+                        <div class="text-center text-md-start mb-3 mb-md-0">
+                            <h4 class="mb-1 text-warning">Aceder à Documentação Técnica (Javadoc)</h4>
+                            <p class="text-muted mb-0">Classes, métodos e estrutura interna do código gerada
+                                automaticamente pelo Maven/Javadoc.</p>
+                        </div>
+                        <a th:href="@{/docs/api/index.html}" class="btn btn-warning btn-lg text-dark">
+                            Ver Javadoc <i class="bi bi-book-fill ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mb-3">Endpoints REST da Aplicação</h2>
+        <hr>
+
+        <h3 class="mb-3 text-secondary">1. PessoaController (`/api/pessoas`)</h3>
+
+        <div class="card endpoint-card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <span class="badge http-post me-3">POST</span>
+                <h5 class="mb-0 text-muted">/cadastro</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong class="text-dark">Descrição:</strong> Endpoint REST para cadastrar um novo usuário
+                    (Completo).
+                </p>
+                <p class="mb-0">
+                    <strong class="text-dark">URL Completa:</strong>
+                    <code
+                        th:text="${baseUrl ?: 'http://localhost:8080'} + '/api/pessoas/cadastro'">http://localhost:8080/api/pessoas/cadastro</code>
+                </p>
+                <p class="mt-2"><strong class="text-dark">Body Requerido:</strong> <code>PessoaRequest</code> (com todos
+                    os campos).</p>
+                <p class="mt-2"><strong class="text-dark">Resposta de Sucesso:</strong> Status 201 (Created) e o
+                    <code>PessoaResponse</code>.</p>
+            </div>
+        </div>
+
+        <div class="card endpoint-card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <span class="badge http-post me-3">POST</span>
+                <h5 class="mb-0 text-muted">/cadastro/simplificado</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong class="text-dark">Descrição:</strong> Endpoint REST para cadastrar um novo usuário com
+                    apenas e-mail e senha. Utiliza placeholders e inicia o processo de ativação.
+                </p>
+                <p class="mb-0">
+                    <strong class="text-dark">URL Completa:</strong>
+                    <code
+                        th:text="${baseUrl ?: 'http://localhost:8080'} + '/api/pessoas/cadastro/simplificado'">http://localhost:8080/api/pessoas/cadastro/simplificado</code>
+                </p>
+                <p class="mt-2"><strong class="text-dark">Body Requerido:</strong>
+                    <code>CadastroSimplificadoRequest</code> (email e senha).</p>
+                <p class="mt-2"><strong class="text-dark">Resposta de Sucesso:</strong> Status 201 (Created) e o
+                    <code>PessoaResponse</code>.</p>
+            </div>
+        </div>
+
+        <hr class="my-5">
+
+        <h3 class="mb-3 text-secondary">2. AtivacaoController (`/api/v1/ativacao`)</h3>
+
+        <div class="card endpoint-card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <span class="badge http-get me-3">GET</span>
+                <h5 class="mb-0 text-muted">/</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong class="text-dark">Descrição:</strong> Lógica para validar o token de ativação (Redis) e
+                    ativar a conta (PostgreSQL). Este é o link clicado pelo utilizador no e-mail.
+                </p>
+                <p class="mb-0">
+                    <strong class="text-dark">Exemplo de URL:</strong>
+                    <code
+                        th:text="${baseUrl ?: 'http://localhost:8080'} + '/api/v1/ativacao?token={token}'">http://localhost:8080/api/v1/ativacao?token=a1b2c3d4e5f6...</code>
+                </p>
+                <p class="mt-2"><strong class="text-dark">Parâmetro:</strong> <code>token</code> (Query Parameter,
+                    obrigatório).</p>
+                <p class="mt-2"><strong class="text-dark">Resposta:</strong> Status 200 (OK) em caso de sucesso ou
+                    Status 400 (Bad Request) se o token for inválido/expirado.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
