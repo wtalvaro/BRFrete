@@ -75,7 +75,7 @@ public class Pessoa {
 	private boolean isCliente;
 
 	// Relação M:M com Perfis (Mapeamento padrão)
-	@OneToMany(mappedBy = "pessoa", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "pessoa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Set<PessoaPerfil> perfis = new HashSet<>();
 
 	// Construtor usado no Mapeamento (Exemplo)

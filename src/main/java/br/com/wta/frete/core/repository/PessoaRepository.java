@@ -1,10 +1,13 @@
 package br.com.wta.frete.core.repository;
 
-import br.com.wta.frete.core.entity.Pessoa;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import br.com.wta.frete.core.entity.Pessoa;
 
 /**
  * Documentação: Repositório JPA para a entidade Pessoa.
@@ -46,6 +49,36 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
      */
     Optional<Pessoa> findBySocialId(String socialId); // <--- IMPLEMENTAÇÃO NECESSÁRIA
 
+    /**
+     * Documentação: Método OTIMIZADO para checagem de existência de e-mail.
+     * Mais rápido que findByEmail().isPresent()
+     */
+    boolean existsByEmail(String email);
+
     // O Spring Data JPA gerará a implementação automaticamente em tempo de
     // execução.
+
+    // ----------------------------------------------------------------------
+    // NOVOS MÉTODOS OTIMIZADOS COM JOIN FETCH (PARA AUTENTICAÇÃO/SEGURANÇA)
+    // ----------------------------------------------------------------------
+
+    /**
+     * Documentação: Método OTIMIZADO para login tradicional.
+     * Usa JOIN FETCH para carregar a coleção LAZY 'perfis' na mesma consulta SQL.
+     * 
+     * @param email Email do usuário
+     * @return Optional<Pessoa> com Perfis carregados.
+     */
+    @Query("SELECT p FROM Pessoa p JOIN FETCH p.perfis WHERE p.email = :email")
+    Optional<Pessoa> findByEmailWithPerfis(@Param("email") String email);
+
+    /**
+     * Documentação: Método OTIMIZADO para Login Social (OAuth2).
+     * Usa JOIN FETCH para carregar a coleção LAZY 'perfis' na mesma consulta SQL.
+     * 
+     * @param socialId O ID único do provedor OAuth2.
+     * @return Optional<Pessoa> com Perfis carregados.
+     */
+    @Query("SELECT p FROM Pessoa p JOIN FETCH p.perfis WHERE p.socialId = :socialId")
+    Optional<Pessoa> findBySocialIdWithPerfis(@Param("socialId") String socialId);
 }

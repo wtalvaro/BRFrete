@@ -60,7 +60,7 @@ public class CadastroPessoaService {
     @Transactional
     public Pessoa cadastrarPessoa(PessoaRequest request) {
         // 1. VALIDAÇÃO DE UNICIDADE (E-mail e Documento)
-        if (pessoaRepository.findByEmail(request.email()).isPresent()) {
+        if (pessoaRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Erro de Cadastro: O e-mail já está em uso.");
         }
         if (pessoaRepository.findByDocumento(request.documento()).isPresent()) {
@@ -84,7 +84,7 @@ public class CadastroPessoaService {
     @Transactional
     public Pessoa cadastrarPessoaSimplificado(CadastroSimplificadoRequest request) {
         // 1. VALIDAÇÃO DE UNICIDADE (APENAS E-MAIL)
-        if (pessoaRepository.findByEmail(request.email()).isPresent()) {
+        if (pessoaRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Erro de Cadastro: O e-mail já está em uso.");
         }
 
