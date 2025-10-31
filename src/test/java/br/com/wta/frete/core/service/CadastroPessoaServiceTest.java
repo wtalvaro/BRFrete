@@ -55,6 +55,7 @@ public class CadastroPessoaServiceTest {
     private StringRedisTemplate redisTemplate;
 
     // --- Dependências Externas (Mocks) ---
+    @SuppressWarnings("removal")
     @MockBean
     private EmailService emailService;
 
@@ -62,6 +63,7 @@ public class CadastroPessoaServiceTest {
      * Método de setup (preparação) que roda antes de CADA teste. Limpa os
      * repositórios e o Redis para garantir que um teste não interfira no outro.
      */
+    @SuppressWarnings("deprecation")
     @BeforeEach
     void setUp() {
         // 1. Limpa o Banco de Dados (necessário por causa do @Transactional)
