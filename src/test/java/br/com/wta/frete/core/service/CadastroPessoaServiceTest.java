@@ -18,14 +18,12 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import br.com.wta.frete.core.controller.dto.CadastroSimplificadoRequest;
 import br.com.wta.frete.core.entity.Perfil; // <--- PRECISA IMPORTAR
 import br.com.wta.frete.core.entity.Pessoa;
 import br.com.wta.frete.core.repository.PerfilRepository; // <--- PRECISA INJETAR
 import br.com.wta.frete.core.repository.PessoaRepository; // <--- PRECISA INJETAR
-import jakarta.persistence.EntityManager;
 
 /**
  * Teste de integração para o CadastroPessoaService. * @SpringBootTest: Carrega
