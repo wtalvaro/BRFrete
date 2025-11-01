@@ -17,12 +17,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
- * Entidade JPA: Pessoa
- * Mapeia a tabela 'core.pessoas' e representa a identidade base de um usuário.
- * Estrutura Simplificada: Remove os campos de token temporário, delegando a
- * expiração ao Redis.
+ * Entidade JPA: Pessoa Mapeia a tabela 'core.pessoas' e representa a identidade
+ * base de um usuário. Estrutura Simplificada: Remove os campos de token
+ * temporário, delegando a expiração ao Redis.
  */
 @Data
 @NoArgsConstructor
@@ -75,6 +75,7 @@ public class Pessoa {
 	private boolean isCliente;
 
 	// Relação M:M com Perfis (Mapeamento padrão)
+	@ToString.Exclude
 	@OneToMany(mappedBy = "pessoa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Set<PessoaPerfil> perfis = new HashSet<>();
 
