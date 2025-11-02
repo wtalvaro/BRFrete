@@ -66,6 +66,7 @@ public class TokenAtivacaoServiceTest {
     // TESTE 1: criarToken()
     // =================================================================
 
+    @SuppressWarnings("null")
     @Test
     void deveCriarTokenEArmazenarCorretamenteNoRedis() {
         // ARRANGE: Nada especial, apenas o setup já basta.
@@ -93,6 +94,7 @@ public class TokenAtivacaoServiceTest {
     // TESTE 2: obterIdPessoaPorToken(String token) - Caminho Feliz
     // =================================================================
 
+    @SuppressWarnings("null")
     @Test
     void deveObterIdPessoaPorTokenERemoverAsChaves() {
         // ARRANGE: Token que vamos simular que existe no Redis
@@ -129,6 +131,7 @@ public class TokenAtivacaoServiceTest {
     // TESTE 3: obterIdPessoaPorToken(String token) - Token Inválido/Expirado
     // =================================================================
 
+    @SuppressWarnings("null")
     @Test
     void deveRetornarNullSeTokenNaoExistirOuEstiverExpirado() {
         // ARRANGE: Simula que o token NÃO está no Redis

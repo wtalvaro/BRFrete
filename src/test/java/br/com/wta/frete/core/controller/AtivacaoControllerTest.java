@@ -36,9 +36,11 @@ public class AtivacaoControllerTest {
     private MockMvc mockMvc;
 
     // Mocks das dependências de serviço (Lógica de Negócio e Repositório)
+    @SuppressWarnings("removal")
     @MockBean
     private TokenAtivacaoService tokenService;
 
+    @SuppressWarnings("removal")
     @MockBean
     private PessoaService pessoaService;
 
@@ -52,6 +54,7 @@ public class AtivacaoControllerTest {
     // TESTE 1: Caminho Feliz - Sucesso
     // =================================================================
 
+    @SuppressWarnings("null")
     @Test
     void deveRetornarStatus200EAtivarContaComTokenValido() throws Exception {
         // 1. ARRANGE
@@ -75,6 +78,7 @@ public class AtivacaoControllerTest {
     // TESTE 2: Caminho Triste - Token Inválido ou Expirado
     // =================================================================
 
+    @SuppressWarnings("null")
     @Test
     void deveRetornarStatus400ComTokenInvalidoOuExpirado() throws Exception {
         // 1. ARRANGE
@@ -97,6 +101,7 @@ public class AtivacaoControllerTest {
     // TESTE 3: Caminho Triste - Erro Interno do Serviço
     // =================================================================
 
+    @SuppressWarnings("null")
     @Test
     void deveRetornarStatus500EmCasoDeFalhaInterna() throws Exception {
         // 1. ARRANGE

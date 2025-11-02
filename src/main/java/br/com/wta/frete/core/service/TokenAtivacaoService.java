@@ -37,6 +37,7 @@ public class TokenAtivacaoService {
      * 
      * @return O token de ativação gerado.
      */
+    @SuppressWarnings("null")
     public String criarToken(Long pessoaId) {
         // 1. Geração do token único
         String token = UUID.randomUUID().toString().replace("-", "");

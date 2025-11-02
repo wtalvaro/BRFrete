@@ -25,6 +25,7 @@ public class PasswordResetTokenService {
 	 * @param userId O ID da pessoa (pessoa_id)
 	 * @param token  O token de segurança (string aleatória)
 	 */
+	@SuppressWarnings("null")
 	public void storeToken(Long userId, String token) {
 		String key = KEY_PREFIX + userId;
 		// O método set armazena o valor com o TTL (Time-to-Live)

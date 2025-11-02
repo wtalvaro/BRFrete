@@ -24,6 +24,7 @@ public class GlobalExceptionHandler {
 	 * NOVO: Trata exceções de falha de validação de DTOs (HTTP 400 Bad Request)
 	 * lançadas automaticamente pelo Spring MVC (@Valid, @Validated).
 	 */
+	@SuppressWarnings("null")
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
 		ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
@@ -50,6 +51,7 @@ public class GlobalExceptionHandler {
 	 * Request). Esta exceção deve ser lançada pelo seu Service
 	 * (InvalidDataException).
 	 */
+	@SuppressWarnings("null")
 	@ExceptionHandler(InvalidDataException.class)
 	public ProblemDetail handleInvalidDataException(InvalidDataException ex) {
 		ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
@@ -75,6 +77,7 @@ public class GlobalExceptionHandler {
 	 * Handler genérico para capturar qualquer Exception não tratada (HTTP 500
 	 * Internal Server Error). Retorna um erro genérico e seguro para o cliente.
 	 */
+	@SuppressWarnings("null")
 	@ExceptionHandler(Exception.class)
 	public ProblemDetail handleGenericException(Exception ex) {
 		// Logar a stack trace completa no servidor para investigação

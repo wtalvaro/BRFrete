@@ -75,6 +75,7 @@ public class PessoaService {
      */
     @Transactional
     public void ativarPessoa(Long pessoaId) {
+        @SuppressWarnings("null")
         Pessoa pessoa = pessoaRepository.findById(pessoaId)
                 .orElseThrow(() -> new IllegalArgumentException("Pessoa não encontrada para ativação."));
 

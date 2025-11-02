@@ -54,10 +54,12 @@ public class PessoaControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @SuppressWarnings("removal")
+@MockBean
     private PessoaService pessoaService;
 
-    @MockBean
+    @SuppressWarnings("removal")
+@MockBean
     private PessoaMapper pessoaMapper;
 
     private static final String ENDPOINT_SIMPLIFICADO = "/api/pessoas/cadastro/simplificado";
@@ -99,7 +101,8 @@ public class PessoaControllerTest {
     // =================================================================
     // TESTE 1: cadastrarSimplificado - Caminho Feliz (201 Created)
     // =================================================================
-    @Test
+    @SuppressWarnings("null")
+@Test
     void deveCadastrarSimplificadoComSucessoERetornarStatus201() throws Exception {
         when(pessoaService.cadastrarPessoaSimplificado(any(CadastroSimplificadoRequest.class)))
                 .thenReturn(pessoaSimulada);
@@ -118,7 +121,8 @@ public class PessoaControllerTest {
     // =================================================================
     // TESTE 2: cadastrarSimplificado - Caminho Triste (E-mail Duplicado -> 400)
     // =================================================================
-    @Test
+    @SuppressWarnings("null")
+@Test
     void deveRetornarStatus400QuandoEmailSimplificadoForDuplicado() throws Exception {
         final String MENSAGEM_ERRO_NEGOCIO = "E-mail já existe na base de dados.";
         final String REASON_CODE = "EMAIL_DUPLICADO";
@@ -145,7 +149,8 @@ public class PessoaControllerTest {
     // =================================================================
     // TESTE 3: cadastrarSimplificado - Caminho Triste (Validação DTO -> 400)
     // =================================================================
-    @Test
+    @SuppressWarnings("null")
+@Test
     void deveRetornarStatus400ParaRequestSimplificadoInvalida() throws Exception {
         // 1. ARRANGE (E-mail Nulo)
         CadastroSimplificadoRequest requestInvalida = new CadastroSimplificadoRequest(null, "senhaSegura123");
@@ -166,7 +171,8 @@ public class PessoaControllerTest {
     // =================================================================
     // TESTE 4: cadastrarCompleto - Caminho Feliz (201 Created)
     // =================================================================
-    @Test
+    @SuppressWarnings("null")
+@Test
     void deveCadastrarCompletoComSucessoERetornarStatus201() throws Exception {
         when(pessoaService.cadastrarPessoa(any(PessoaRequest.class))).thenReturn(pessoaSimulada);
 
@@ -187,7 +193,8 @@ public class PessoaControllerTest {
     // =================================================================
     // TESTE 5: cadastrarCompleto - Caminho Triste (Validação DTO -> 400)
     // =================================================================
-    @Test
+    @SuppressWarnings("null")
+@Test
     void deveRetornarStatus400ParaRequestCompletaInvalida() throws Exception {
         // 1. ARRANGE (Criar uma requisição inválida: nome e documento nulos)
         // A ordem dos campos é: nomeCompleto, documento, email, senha, telefone
@@ -226,7 +233,8 @@ public class PessoaControllerTest {
      * duplicado) para o cadastro completo, garantindo que o Controller retorna
      * Status 400 com os campos personalizados do ProblemDetail.
      */
-    @Test
+    @SuppressWarnings("null")
+@Test
     void deveRetornarStatus400QuandoEmailOuDocumentoCompletoForDuplicado() throws Exception {
         final String MENSAGEM_ERRO_NEGOCIO = "Documento já existe na base de dados.";
         final String REASON_CODE = "DOCUMENTO_DUPLICADO";

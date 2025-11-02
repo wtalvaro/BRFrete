@@ -66,6 +66,7 @@ public class PessoaServiceTest {
     // TESTES DE LÓGICA CORE: ativarPessoa(Long pessoaId)
     // =================================================================
 
+    @SuppressWarnings("null")
     @Test
     void deveAtivarPessoaComSucesso() {
         // ARRANGE: Simula que o repositório ENCONTRA uma pessoa INATIVA
@@ -87,6 +88,7 @@ public class PessoaServiceTest {
         // assertTrue(pessoaInativa.isAtivo()); // Removido para focar no Mockito
     }
 
+    @SuppressWarnings("null")
     @Test
     void naoDeveSalvarSePessoaJaEstiverAtiva() {
         // ARRANGE: Simula que o repositório ENCONTRA uma pessoa ATIVA
@@ -102,6 +104,7 @@ public class PessoaServiceTest {
         verify(pessoaRepository, never()).save(any(Pessoa.class));
     }
 
+    @SuppressWarnings("null")
     @Test
     void deveLancarExcecaoSePessoaNaoExistir() {
         // ARRANGE: Simula que o repositório NÃO ENCONTRA o ID

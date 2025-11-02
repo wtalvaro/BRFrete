@@ -52,6 +52,7 @@ public class PessoaSocialServiceTest {
      * Social é novo, o serviço deve criar, preencher e salvar uma nova entidade
      * Pessoa com os dados sociais e uma senha placeholder.
      */
+    @SuppressWarnings("null")
     @Test
     void deveCriarNovaPessoaQuandoSocialIdNaoExistir() {
         // 1. ARRANGE (Preparação)
@@ -117,6 +118,7 @@ public class PessoaSocialServiceTest {
      * ID Social já existe, o serviço deve obter e retornar a Pessoa existente,
      * garantindo que NENHUMA operação de escrita é feita.
      */
+    @SuppressWarnings("null")
     @Test
     void deveRetornarPessoaExistenteQuandoSocialIdJaExiste() {
         // 1. ARRANGE (Preparação)
