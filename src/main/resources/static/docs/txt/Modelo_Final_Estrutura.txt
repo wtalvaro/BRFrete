@@ -1,6 +1,4 @@
 .
-├── .classpath
-├── .factorypath
 ├── .gitattributes
 ├── .gitignore
 ├── HELP.md
@@ -10,7 +8,6 @@
 ├── mvnw
 ├── mvnw.cmd
 ├── pom.xml
-├── .project
 ├── src
 │   ├── main
 │   │   ├── java
@@ -81,13 +78,15 @@
 │   │   │                   │   │   │   ├── LoginRequest.java
 │   │   │                   │   │   │   ├── MensagemRequest.java
 │   │   │                   │   │   │   ├── MensagemResponse.java
+│   │   │                   │   │   │   ├── OAuth2UserRequestDTO.java
 │   │   │                   │   │   │   ├── ParticipanteConversaRequest.java
 │   │   │                   │   │   │   ├── ParticipanteConversaResponse.java
 │   │   │                   │   │   │   ├── PerfilResponse.java
 │   │   │                   │   │   │   ├── PessoaRequest.java
 │   │   │                   │   │   │   └── PessoaResponse.java
 │   │   │                   │   │   ├── NomeController.java
-│   │   │                   │   │   └── PessoaController.java
+│   │   │                   │   │   ├── PessoaController.java
+│   │   │                   │   │   └── SuccessRestController.java
 │   │   │                   │   ├── entity
 │   │   │                   │   │   ├── ContaDigital.java
 │   │   │                   │   │   ├── Conversa.java
@@ -112,6 +111,8 @@
 │   │   │                   │   │   ├── PessoaPerfilRepository.java
 │   │   │                   │   │   └── PessoaRepository.java
 │   │   │                   │   └── service
+│   │   │                   │       ├── CadastroPessoaService.java
+│   │   │                   │       ├── CustomOAuth2UserService.java
 │   │   │                   │       ├── EmailService.java
 │   │   │                   │       ├── mapper
 │   │   │                   │       │   ├── ContaDigitalMapper.java
@@ -121,6 +122,7 @@
 │   │   │                   │       │   └── PessoaMapper.java
 │   │   │                   │       ├── PasswordResetTokenService.java
 │   │   │                   │       ├── PessoaService.java
+│   │   │                   │       ├── PessoaSocialService.java
 │   │   │                   │       └── TokenAtivacaoService.java
 │   │   │                   ├── inventario
 │   │   │                   │   ├── controller
@@ -238,48 +240,23 @@
 │   │   │                               ├── ComentarioMapper.java
 │   │   │                               └── SeguidorMapper.java
 │   │   └── resources
+│   │       ├── application-dev.properties
+│   │       ├── application-prod.properties
 │   │       ├── application.properties
-│   │       ├── docs
-│   │       │   ├── sql
-│   │       │   │   ├── init_insert.sql
-│   │       │   │   └── schema.sql
-│   │       │   └── txt
-│   │       │       ├── Modelo_Final_Doc.txt
-│   │       │       ├── Modelo_Final_Estrutura.txt
-│   │       │       ├── Modelo_Final_Implementacao.txt
-│   │       │       ├── Modelo_Final_Monetizacao.txt
-│   │       │       └── Modelo_Final_Objetivo.txt
+│   │       ├── application-test.properties
 │   │       └── static
-│   │           └── docs
-│   │               └── api
-│   │                   ├── element-list
-│   │                   ├── legal
-│   │                   │   ├── ADDITIONAL_LICENSE_INFO
-│   │                   │   ├── ASSEMBLY_EXCEPTION
-│   │                   │   ├── dejavufonts.md
-│   │                   │   ├── jquery.md
-│   │                   │   ├── jqueryUI.md
-│   │                   │   └── LICENSE
-│   │                   ├── member-search-index.js
-│   │                   ├── module-search-index.js
-│   │                   ├── package-search-index.js
-│   │                   ├── resource-files
-│   │                   │   ├── copy.svg
-│   │                   │   ├── glass.svg
-│   │                   │   ├── jquery-ui.min.css
-│   │                   │   ├── left.svg
-│   │                   │   ├── link.svg
-│   │                   │   ├── right.svg
-│   │                   │   ├── stylesheet.css
-│   │                   │   └── x.svg
-│   │                   ├── script-files
-│   │                   │   ├── jquery-3.7.1.min.js
-│   │                   │   ├── jquery-ui.min.js
-│   │                   │   ├── script.js
-│   │                   │   ├── search.js
-│   │                   │   └── search-page.js
-│   │                   ├── tag-search-index.js
-│   │                   └── type-search-index.js
+│   │           ├── docs
+│   │           │   ├── sql
+│   │           │   │   ├── estrutura.sql
+│   │           │   │   ├── init_insert.sql
+│   │           │   │   └── schema.sql
+│   │           │   └── txt
+│   │           │       ├── Modelo_Final_Doc.txt
+│   │           │       ├── Modelo_Final_Estrutura.txt
+│   │           │       ├── Modelo_Final_Implementacao.txt
+│   │           │       ├── Modelo_Final_Monetizacao.txt
+│   │           │       └── Modelo_Final_Objetivo.txt
+│   │           └── favicon.ico
 │   └── test
 │       └── java
 │           └── br
@@ -288,10 +265,17 @@
 │                       └── frete
 │                           ├── BrFreteApplicationTests.java
 │                           └── core
+│                               ├── controller
+│                               │   └── AtivacaoControllerTest.java
 │                               └── service
-│                                   └── PasswordResetTokenServiceTest.java
+│                                   ├── CadastroPessoaServiceTest.java
+│                                   ├── PessoaServiceTest.java
+│                                   ├── PessoaSocialServiceTest.java
+│                                   └── TokenAtivacaoServiceTest.java
 └── .vscode
+    ├── extensions.json
+    ├── java-formatter.xml
     ├── launch.json
     └── settings.json
 
-83 directories, 212 files
+79 directories, 200 files
