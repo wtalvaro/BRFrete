@@ -1,12 +1,16 @@
 package br.com.wta.frete.shared.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail; // Importação chave do Spring Boot 3+
+import org.springframework.http.ProblemDetail;
+import org.springframework.validation.FieldError; // Novo Import
+import org.springframework.web.bind.MethodArgumentNotValidException; // Novo Import
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.net.URI;
-import java.time.Instant; // Opcional, para adicionar timestamp
+import java.time.Instant;
+import java.util.HashMap; // Novo Import
+import java.util.Map; // Novo Import
 
 /**
  * Componente global de tratamento de exceções (@ControllerAdvice). Responsável
@@ -16,11 +20,35 @@ import java.time.Instant; // Opcional, para adicionar timestamp
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-	// O Spring MVC converte automaticamente o ProblemDetail para a resposta HTTP
-	// com o status e corpo corretos.
+	/**
+	 * NOVO: Trata exceções de falha de validação de DTOs (HTTP 400 Bad Request)
+	 * lançadas automaticamente pelo Spring MVC (@Valid, @Validated).
+	 */
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+		ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+
+		problemDetail.setTitle("Falha na Validação dos Dados de Entrada");
+		problemDetail.setDetail("Um ou mais campos da requisição contêm erros. Verifique a lista de erros.");
+
+		// Coleta todos os erros de campo e suas mensagens
+		Map<String, String> validationErrors = new HashMap<>();
+		for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+			// Adiciona o nome do campo e a mensagem de erro padrão
+			validationErrors.put(error.getField(), error.getDefaultMessage());
+		}
+
+		problemDetail.setProperty("validationErrors", validationErrors); // Adiciona o mapa ao ProblemDetail
+		problemDetail.setType(URI.create("/docs/erros#validation-failure"));
+		problemDetail.setProperty("timestamp", Instant.now());
+
+		return problemDetail;
+	}
 
 	/**
-	 * Trata exceções de Validação/Dados Inválidos (HTTP 400 Bad Request).
+	 * Trata exceções de Validação/Dados Inválidos de REGRA DE NEGÓCIO (HTTP 400 Bad
+	 * Request). Esta exceção deve ser lançada pelo seu Service
+	 * (InvalidDataException).
 	 */
 	@ExceptionHandler(InvalidDataException.class)
 	public ProblemDetail handleInvalidDataException(InvalidDataException ex) {
@@ -38,24 +66,10 @@ public class GlobalExceptionHandler {
 		// -----------------------------------------------------------
 
 		problemDetail.setType(URI.create("/docs/erros#" + ex.getReasonCode().toLowerCase()));
+		problemDetail.setProperty("timestamp", Instant.now());
 
 		return problemDetail;
 	}
-
-	// Exemplo de como adicionar um handler para uma exceção de Recurso Não
-	// Encontrado (404)
-	/*
-	 * @ExceptionHandler(ResourceNotFoundException.class) public ProblemDetail
-	 * handleResourceNotFoundException(ResourceNotFoundException ex) { ProblemDetail
-	 * problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-	 * 
-	 * problemDetail.setTitle("Recurso Não Encontrado");
-	 * problemDetail.setDetail(ex.getMessage());
-	 * problemDetail.setType(URI.create("/docs/erros#not-found"));
-	 * problemDetail.setProperty("timestamp", Instant.now());
-	 * 
-	 * return problemDetail; }
-	 */
 
 	/**
 	 * Handler genérico para capturar qualquer Exception não tratada (HTTP 500
