@@ -66,5 +66,3 @@ src/main/java/com.seuprojeto.plataforma
 ```bash
 mvn spring-boot:run
 ```
-
-O BRFrete é o seu projeto de Logística Social e Económica\! Posso ajudar-lhe a criar um exemplo de mapeamento para uma Entidade específica, como `logistica.ordens_servico`, que usa o tipo ENUM personalizado?
