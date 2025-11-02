@@ -38,18 +38,15 @@ O projeto é modularizado de acordo com os schemas de base de dados, garantindo 
 
 A arquitetura do código reflete os schemas do banco de dados, sendo organizada por pacotes que correspondem aos módulos funcionais.
 
-src/main/java/com.seuprojeto.plataforma
-├── core/
-│   ├── api/          # Controladores REST (JSON, /api/v1/...)
-│   ├── web/          # Controladores Web (HTML, /app/...)
-│   ├── entity/       # Mapeamento JPA (e.g., Pessoa.java)
-│   ├── repository/   # JpaRepository (e.g., PessoaRepository.java)
-│   └── service/      # Lógica de Negócio (e.g., PessoaService.java)
-├── colaboradores/
-│   ├── entity/       # (e.g., Transportador.java, Veiculo.java)
-... (outros schemas)
-
-> O mapeamento da tabela `core.pessoas` para o JPA é feito utilizando `@Table(name = "pessoas", schema = "core")`.
+├── config/              # Configurações globais (Segurança, CORS)
+├── utils/               # Classes utilitárias
+├── core/                # Mapeia o SCHEMA "core" (Identidades e Perfis)
+├── clientes/            # Mapeia o SCHEMA "clientes" (Pedidos de Coleta)
+├── colaboradores/       # Mapeia o SCHEMA "colaboradores" (Transportadores, Catadores, Veículos)
+├── logistica/           # Mapeia o SCHEMA "logistica" (Fretes, Leilões, Ordens de Serviço)
+├── marketplace/         # Mapeia o SCHEMA "marketplace" (Produtos e Categorias)
+├── inventario/          # Mapeia o SCHEMA "inventario" (Controle de Estoque)
+└── social/              # Mapeia o SCHEMA "social" (Avaliações, Comentários, Seguidores)
 
 ## 🏃 Como Correr o Projeto
 
