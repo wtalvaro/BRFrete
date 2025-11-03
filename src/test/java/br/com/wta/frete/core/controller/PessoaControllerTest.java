@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate; // Import necessário
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -55,11 +56,11 @@ public class PessoaControllerTest {
     private ObjectMapper objectMapper;
 
     @SuppressWarnings("removal")
-@MockBean
+    @MockBean
     private PessoaService pessoaService;
 
     @SuppressWarnings("removal")
-@MockBean
+    @MockBean
     private PessoaMapper pessoaMapper;
 
     private static final String ENDPOINT_SIMPLIFICADO = "/api/pessoas/cadastro/simplificado";
@@ -74,13 +75,13 @@ public class PessoaControllerTest {
     void setup() {
         requestSimplificado = new CadastroSimplificadoRequest("teste@email.com", "senhaSegura123");
 
-        // DTO de Requisição Completa: 5 ARGUMENTOS (nomeCompleto, documento, email,
-        // senha, telefone)
+        // DTO de Requisição Completa: AGORA COM 6 ARGUMENTOS, incluindo dataNascimento
         requestCompleto = new PessoaRequest("Nome Completo do Utilizador", // 1. nomeCompleto
                 "12.345.678/0001-90", // 2. documento
-                "nome.completo@email.com", // 3. email
-                "SenhaForte123", // 4. senha
-                "5511987654321" // 5. telefone
+                LocalDate.of(1990, 1, 1), // 3. dataNascimento (CORRIGIDO)
+                "nome.completo@email.com", // 4. email
+                "SenhaForte123", // 5. senha
+                "5511987654321" // 6. telefone
         );
 
         pessoaSimulada = new Pessoa();
@@ -89,11 +90,17 @@ public class PessoaControllerTest {
         pessoaSimulada.setNome("PLACEHOLDER");
         pessoaSimulada.setAtivo(true);
 
-        // DTO de Resposta (8 argumentos para o Record PessoaResponse)
-        responseSimulada = new PessoaResponse(pessoaSimulada.getId(), pessoaSimulada.getNome(),
-                pessoaSimulada.getEmail(), null, // telefone
+        // DTO de Resposta: AGORA COM 9 ARGUMENTOS (id, nome, email, telefone,
+        // dataNascimento, dataCadastro, ativo, isColaborador, isCliente)
+        responseSimulada = new PessoaResponse(
+                pessoaSimulada.getId(),
+                pessoaSimulada.getNome(),
+                pessoaSimulada.getEmail(),
+                "5511987654321", // Telefone (usando um valor, pode ser null, mas o original era null)
+                LocalDate.of(1990, 1, 1), // dataNascimento (CORRIGIDO)
                 LocalDateTime.now(), // dataCadastro
-                pessoaSimulada.isAtivo(), false, // isColaborador
+                pessoaSimulada.isAtivo(),
+                false, // isColaborador
                 true // isCliente
         );
     }
@@ -102,7 +109,7 @@ public class PessoaControllerTest {
     // TESTE 1: cadastrarSimplificado - Caminho Feliz (201 Created)
     // =================================================================
     @SuppressWarnings("null")
-@Test
+    @Test
     void deveCadastrarSimplificadoComSucessoERetornarStatus201() throws Exception {
         when(pessoaService.cadastrarPessoaSimplificado(any(CadastroSimplificadoRequest.class)))
                 .thenReturn(pessoaSimulada);
@@ -122,7 +129,7 @@ public class PessoaControllerTest {
     // TESTE 2: cadastrarSimplificado - Caminho Triste (E-mail Duplicado -> 400)
     // =================================================================
     @SuppressWarnings("null")
-@Test
+    @Test
     void deveRetornarStatus400QuandoEmailSimplificadoForDuplicado() throws Exception {
         final String MENSAGEM_ERRO_NEGOCIO = "E-mail já existe na base de dados.";
         final String REASON_CODE = "EMAIL_DUPLICADO";
@@ -150,7 +157,7 @@ public class PessoaControllerTest {
     // TESTE 3: cadastrarSimplificado - Caminho Triste (Validação DTO -> 400)
     // =================================================================
     @SuppressWarnings("null")
-@Test
+    @Test
     void deveRetornarStatus400ParaRequestSimplificadoInvalida() throws Exception {
         // 1. ARRANGE (E-mail Nulo)
         CadastroSimplificadoRequest requestInvalida = new CadastroSimplificadoRequest(null, "senhaSegura123");
@@ -172,7 +179,7 @@ public class PessoaControllerTest {
     // TESTE 4: cadastrarCompleto - Caminho Feliz (201 Created)
     // =================================================================
     @SuppressWarnings("null")
-@Test
+    @Test
     void deveCadastrarCompletoComSucessoERetornarStatus201() throws Exception {
         when(pessoaService.cadastrarPessoa(any(PessoaRequest.class))).thenReturn(pessoaSimulada);
 
@@ -194,15 +201,17 @@ public class PessoaControllerTest {
     // TESTE 5: cadastrarCompleto - Caminho Triste (Validação DTO -> 400)
     // =================================================================
     @SuppressWarnings("null")
-@Test
+    @Test
     void deveRetornarStatus400ParaRequestCompletaInvalida() throws Exception {
         // 1. ARRANGE (Criar uma requisição inválida: nome e documento nulos)
-        // A ordem dos campos é: nomeCompleto, documento, email, senha, telefone
-        PessoaRequest requestInvalida = new PessoaRequest(null, // nomeCompleto: Inválido (@NotBlank)
-                null, // documento: Inválido (@NotBlank)
-                "valido@email.com", // email: Válido
-                "SenhaForte123", // senha: Válido
-                "5511987654321" // telefone: Válido
+        // A ordem dos campos é: nomeCompleto, documento, dataNascimento, email, senha,
+        // telefone
+        PessoaRequest requestInvalida = new PessoaRequest(null, // 1. nomeCompleto: Inválido (@NotBlank)
+                null, // 2. documento: Inválido (@NotBlank)
+                LocalDate.of(2000, 1, 1), // 3. dataNascimento: Válido (adicionado para compilar)
+                "valido@email.com", // 4. email: Válido
+                "SenhaForte123", // 5. senha: Válido
+                "5511987654321" // 6. telefone: Válido
         );
 
         // 2. ACT & 3. ASSERT (Execução e Verificação)
@@ -234,7 +243,7 @@ public class PessoaControllerTest {
      * Status 400 com os campos personalizados do ProblemDetail.
      */
     @SuppressWarnings("null")
-@Test
+    @Test
     void deveRetornarStatus400QuandoEmailOuDocumentoCompletoForDuplicado() throws Exception {
         final String MENSAGEM_ERRO_NEGOCIO = "Documento já existe na base de dados.";
         final String REASON_CODE = "DOCUMENTO_DUPLICADO";

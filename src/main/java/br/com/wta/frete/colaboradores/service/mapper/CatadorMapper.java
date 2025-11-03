@@ -37,7 +37,6 @@ public interface CatadorMapper {
 	 */
 	@Mapping(source = "pessoaId", target = "pessoaId")
 	@Mapping(source = "areaAtuacaoGeografica", target = "areaAtuacaoGeografica")
-	@Mapping(source = "dataNascimento", target = "dataNascimento")
 	@Mapping(source = "associacaoId", target = "associacaoId")
 	// Mapeia o objeto Pessoa aninhado na Entidade Catador para o DTO PessoaResponse
 	@Mapping(source = "pessoa", target = "dadosPessoa")
@@ -69,7 +68,6 @@ public interface CatadorMapper {
 	 */
 	@Mapping(source = "pessoaId", target = "pessoaId")
 	@Mapping(source = "areaAtuacaoGeografica", target = "areaAtuacaoGeografica")
-	@Mapping(source = "dataNascimento", target = "dataNascimento")
 	@Mapping(source = "associacaoId", target = "associacaoId")
 	@Mapping(target = "pessoa", ignore = true) // A Pessoa deve ser setada pelo Service
 	Catador toEntity(CatadorRequest request);
@@ -82,7 +80,6 @@ public interface CatadorMapper {
 	 * @param request O DTO CatadorRequest com dados de atualização.
 	 * @param catador A entidade Catador a ser atualizada.
 	 */
-	@Mapping(source = "dataNascimento", target = "dataNascimento")
 	@Mapping(source = "associacaoId", target = "associacaoId")
 	@Mapping(source = "areaAtuacaoGeografica", target = "areaAtuacaoGeografica")
 	@Mapping(target = "pessoaId", ignore = true) // Chave primária não é atualizável

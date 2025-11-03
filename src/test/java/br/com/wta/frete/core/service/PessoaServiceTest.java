@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -165,7 +166,8 @@ public class PessoaServiceTest {
         // 1. ARRANGE (Preparação)
         // CORRIGIDO: Agora apenas 5 argumentos, na ordem correta:
         // nomeCompleto, documento, email, senha, telefone
-        PessoaRequest request = new PessoaRequest("Nome Completo", "doc12345", "completo@email.com", "senhaForte",
+        PessoaRequest request = new PessoaRequest("Nome Completo", "doc12345", LocalDate.of(1990, 1, 1),
+                "completo@email.com", "senhaForte",
                 "900000000");
 
         Pessoa pessoaEsperada = new Pessoa(); // Mock do objeto Pessoa que seria retornado

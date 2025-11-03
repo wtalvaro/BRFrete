@@ -1,5 +1,6 @@
 package br.com.wta.frete.core.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,6 +56,12 @@ public class Pessoa {
 
 	@Column(name = "senha", nullable = false)
 	private String senha;
+
+	/**
+	 * Data de nascimento (DATE).
+	 */
+	@Column(name = "data_nascimento")
+	private LocalDate dataNascimento;
 
 	// Data de cadastro, default now() no SQL
 	@Column(name = "data_cadastro", columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")

@@ -84,6 +84,66 @@ CREATE TYPE logistica.status_servico AS ENUM (
     'CANCELADO'
 );
 
+-- NOVO ENUM: core.status_kyc_enum (Baseado em StatusKYC.java)
+DROP TYPE IF EXISTS core.status_kyc_enum CASCADE;
+CREATE TYPE core.status_kyc_enum AS ENUM (
+    'PENDENTE',
+    'EM_REVISAO',
+    'APROVADO',
+    'REPROVADO'
+);
+
+-- NOVO ENUM: core.tipo_conversa_enum (Baseado em TipoConversa.java)
+DROP TYPE IF EXISTS core.tipo_conversa_enum CASCADE;
+CREATE TYPE core.tipo_conversa_enum AS ENUM (
+    'PRIVADA',
+    'GRUPO',
+    'SUPORTE'
+);
+
+-- NOVO ENUM: colaboradores.status_veiculo_enum (Baseado em StatusVeiculo.java)
+DROP TYPE IF EXISTS colaboradores.status_veiculo_enum CASCADE;
+CREATE TYPE colaboradores.status_veiculo_enum AS ENUM (
+    'DISPONIVEL',
+    'EM_MANUTENCAO',
+    'EM_VIAGEM',
+    'INATIVO'
+);
+
+-- NOVO ENUM: colaboradores.tipo_veiculo_enum (MÁXIMA VARIEDADE)
+DROP TYPE IF EXISTS colaboradores.tipo_veiculo_enum CASCADE;
+CREATE TYPE colaboradores.tipo_veiculo_enum AS ENUM (
+    -- VEÍCULOS LEVES E URBANOS
+    'VEICULO_UTILITARIO',   -- Como furgão ou caminhonete de carga (Fiorino/Saveiro)
+    'VUC',                  -- Veículo Urbano de Carga (caminhão 3/4)
+    'FURGAO',               -- Van fechada para transporte de carga
+
+    -- CAMINHÕES RÍGIDOS (POR EIXO)
+    'TOCO_2_EIXOS',         -- Caminhão Semipesado (2 eixos simples)
+    'TRUCK_3_EIXOS',        -- Caminhão Pesado (3 eixos)
+    'BITRUCK_4_EIXOS',      -- Caminhão com 4 eixos (2 na frente, 2 atrás)
+
+    -- CARRETAS E COMBINAÇÕES SIMPLES
+    'CAVALO_MECANICO_SIMPLES',-- Apenas a cabine tratora (Cavalo 4x2)
+    'CARRETA_2_EIXOS',      -- Cavalo Simples + Semirreboque 2 eixos
+    'CARRETA_3_EIXOS',      -- Cavalo Simples + Semirreboque 3 eixos
+    'CARRETA_LS',           -- Cavalo Trucado (6x2) + Semirreboque 3 eixos
+
+    -- COMBINAÇÕES ARTICULADAS DE MAIOR PORTE
+    'BITREM_7_EIXOS',       -- Combinação de 7 eixos (Ex: Romeu e Julieta)
+    'RODOTREM_9_EIXOS',     -- Combinação de 9 eixos (Máxima capacidade legal)
+    'VANDERLEIA_3_EIXOS',   -- Semirreboque especial de 3 eixos distantes
+
+    -- VEÍCULOS POR CARROCERIA (Especializados, se necessário para cálculo de frete)
+    'BAU_SECO',             -- Baú Fechado para carga seca
+    'BAU_FRIGORIFICO',      -- Baú com refrigeração
+    'CACAMBA_BASICA',       -- Caçamba (para grãos, areia, etc.)
+    'TANQUE',               -- Para transporte de líquidos/gases
+    'CEGONHA',              -- Para transporte de veículos
+    'PORTA_CONTAINER',      -- Chassi para transporte de contentores marítimos
+    'GRADE_BAIXA',          -- Caminhão plataforma/carga geral aberta
+    'GRANELEIRO'            -- Para grãos e produtos a granel
+);
 
 -- ======================================================================
 -- 3. SCHEMA CORE: Identidades e Perfis M:M (Tabelas MESTRAS)
@@ -96,6 +156,7 @@ CREATE TABLE core.pessoas (
 	email varchar(100) NOT NULL,
 	telefone varchar(20) NULL,
 	senha varchar(255) NOT NULL,
+    data_nascimento DATE,
 	data_cadastro timestamp DEFAULT now() NULL,
 	ativo bool DEFAULT false NOT NULL,
 	is_colaborador bool DEFAULT false NOT NULL,
@@ -125,7 +186,8 @@ CREATE TABLE core.pessoa_perfil (
 CREATE TABLE core.contas_digitais (
     pessoa_id BIGINT PRIMARY KEY,
     conta_uuid VARCHAR(64) UNIQUE NOT NULL,
-    status_kyc VARCHAR(20) NOT NULL DEFAULT 'PENDENTE',
+    -- COLUNA ATUALIZADA: Usando o novo tipo ENUM com o esquema qualificado
+    status_kyc core.status_kyc_enum NOT NULL DEFAULT 'PENDENTE'::core.status_kyc_enum,
     data_abertura TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
     FOREIGN KEY (pessoa_id) REFERENCES core.pessoas(pessoa_id) ON DELETE CASCADE
 );
@@ -138,7 +200,8 @@ CREATE TABLE core.contas_digitais (
 -- 1. Tabela de Conversas (Chats)
 CREATE TABLE core.conversas (
     conversa_id BIGSERIAL PRIMARY KEY,
-    tipo_conversa VARCHAR(20) NOT NULL DEFAULT 'PRIVADA', -- Ex: PRIVADA, GRUPO, SUPORTE
+    -- COLUNA ATUALIZADA: Usando o novo tipo ENUM com o esquema qualificado
+    tipo_conversa core.tipo_conversa_enum NOT NULL DEFAULT 'PRIVADA'::core.tipo_conversa_enum,
     data_criacao TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
     ultima_mensagem_em TIMESTAMP WITHOUT TIME ZONE DEFAULT now()
 );
@@ -195,21 +258,30 @@ CREATE TABLE colaboradores.lojistas (
 
 CREATE TABLE colaboradores.catadores (
     pessoa_id BIGINT PRIMARY KEY,
-    data_nascimento DATE,
     associacao_id INTEGER,
     area_atuacao_geografica TEXT,
     FOREIGN KEY (pessoa_id) REFERENCES core.pessoas(pessoa_id) ON DELETE CASCADE
 );
 
+-- 5. Tabela de Veículos
 CREATE TABLE colaboradores.veiculos (
-    veiculo_id SERIAL PRIMARY KEY,
-    transportador_pessoa_id BIGINT NOT NULL,
-    matricula VARCHAR(20) UNIQUE NOT NULL,
-    tipo_veiculo VARCHAR(50) NOT NULL,
-    capacidade_peso_kg NUMERIC(10, 2) NOT NULL,
-    capacidade_volume_m3 NUMERIC(10, 2),
-    status_veiculo VARCHAR(20) NOT NULL DEFAULT 'ATIVO',
-    FOREIGN KEY (transportador_pessoa_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE CASCADE
+    veiculo_id BIGSERIAL PRIMARY KEY,
+    transportador_id BIGINT NOT NULL,
+    placa VARCHAR(10) NOT NULL UNIQUE,
+    renavam VARCHAR(11) NOT NULL UNIQUE,
+    tipo_veiculo colaboradores.tipo_veiculo_enum NOT NULL, -- Usa o ENUM expandido
+    status_veiculo colaboradores.status_veiculo_enum NOT NULL DEFAULT 'DISPONIVEL'::colaboradores.status_veiculo_enum,
+    ano_fabricacao INTEGER,
+    capacidade_m3 NUMERIC(10, 2), -- Metros Cúbicos
+    capacidade_kg NUMERIC(10, 2), -- Quilogramas
+    possui_rastreador BOOLEAN DEFAULT FALSE,
+    
+    -- CORREÇÃO DA CHAVE ESTRANGEIRA (FK): 
+    -- Agora referencia colaboradores.transportadores(pessoa_id)
+    FOREIGN KEY (transportador_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE CASCADE 
+    
+    -- NOTA: A FK para 'tipos_veiculos' foi removida, pois a coluna 'tipo_veiculo'
+    -- agora usa o ENUM nativo do PostgreSQL.
 );
 
 
@@ -453,3 +525,18 @@ ADD COLUMN social_id VARCHAR(255) UNIQUE;
 -- Isto é crucial, pois um registo social via Google pode não ter um documento na hora.
 ALTER TABLE core.pessoas
 ALTER COLUMN documento DROP NOT NULL;
+
+-- Inserção dos Papéis de Permissão (ROLES) na tabela core.perfis
+-- Estes são dados estáticos e essenciais para a segurança do sistema.
+INSERT INTO core.perfis (nome_perfil, descricao) VALUES
+('ADMIN', 'Administrador do Sistema, acesso total.'),
+('CLIENTE', 'Pessoa que utiliza os serviços (solicita frete/compra no marketplace).'),
+('TRANSPORTADOR', 'Colaborador que realiza lances e executa fretes.'),
+('LOJISTA', 'Colaborador que vende produtos no marketplace.'),
+('SUCATEIRO', 'Colaborador com estoque de sucata para negociação.'),
+('CATADOR', 'Colaborador que coleta material.'),
+('LEAD', 'Utilizador interessado que está em fase de qualificação ou engajamento.')
+ON CONFLICT (nome_perfil) DO NOTHING;
+
+-- Nota: ON CONFLICT DO NOTHING evita problemas se o script for executado mais de uma vez 
+-- em ambientes onde o Flyway não esteja a ser usado (ex: teste local).

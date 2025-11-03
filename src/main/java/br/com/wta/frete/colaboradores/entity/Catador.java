@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDate;
-
 import br.com.wta.frete.core.entity.Pessoa;
 
 /**
@@ -34,12 +32,6 @@ public class Catador {
 	@MapsId
 	@JoinColumn(name = "pessoa_id", nullable = false)
 	private Pessoa pessoa;
-
-	/**
-	 * Data de nascimento (DATE).
-	 */
-	@Column(name = "data_nascimento")
-	private LocalDate dataNascimento;
 
 	/**
 	 * ID da associação/cooperativa à qual o catador pertence (INTEGER). NOTA: Este
