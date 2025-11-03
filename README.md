@@ -95,7 +95,7 @@ O projeto é modularizado de acordo com os schemas de base de dados, garantindo 
     spring.security.oauth2.client.registration.google.client-id=[YOUR_GOOGLE_CLIENT_ID]
     spring.security.oauth2.client.registration.google.client-secret=[YOUR_GOOGLE_CLIENT_SECRET]
     # Escopos (Permissões) solicitados ao Google: email e informações básicas do perfil.
-    spring.security.oauth2.client.registration.google.scope=email,profile
+    spring.security.oauth2.client.registration.google.scope=openid,email,profile
     ```
 
 4.  **Execução:** Corra a aplicação principal usando o Maven ou diretamente pela IDE.
