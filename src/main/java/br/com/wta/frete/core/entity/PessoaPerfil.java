@@ -51,15 +51,21 @@ public class PessoaPerfil {
 
 	// NOVO: Construtor de Conveniência para inicializar a chave composta
 	/**
-	 * Documentação: Construtor que inicializa a chave composta (this.id) antes do
-	 * Hibernate tentar preencher seus campos via @MapsId.
+	 * Documentação: Construtor que inicializa a chave composta (this.id) com os IDs
+	 * das entidades. Isso é crucial para que o Hibernate rastreie a persistência
+	 * da chave composta.
 	 * 
 	 * @param pessoa A entidade Pessoa.
+	 * 
 	 * @param perfil A entidade Perfil.
 	 */
 	public PessoaPerfil(Pessoa pessoa, Perfil perfil) {
-		// Inicializa o ID composto ANTES de ser gerenciado pelo Hibernate
-		this.id = new PessoaPerfilId();
+		// 1. Inicializa o ID composto com os IDs das entidades.
+		// O Pessoa ID será NULL, o que é esperado e corrigido pelo Hibernate após o
+		// save.
+		this.id = new PessoaPerfilId(pessoa.getId(), perfil.getId());
+
+		// 2. Seta as referências das entidades
 		this.pessoa = pessoa;
 		this.perfil = perfil;
 	}

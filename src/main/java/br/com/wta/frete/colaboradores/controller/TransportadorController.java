@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-// Assumindo que você usa Swagger/OpenAPI:
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -24,17 +23,19 @@ public class TransportadorController {
     }
 
     /**
-     * Documentação: Endpoint para converter um lead existente em um Transportador.
+     * Documentação: Endpoint para adicionar o perfil de Transportador a uma Pessoa
+     * existente.
      * <p>
-     * Rota: POST /api/colaboradores/transportadores/converter/{pessoaId}
+     * Rota: POST /api/colaboradores/transportadores/adicionar-perfil/{pessoaId}
      *
-     * @param pessoaId O ID da Pessoa que será convertida.
-     * @return Resposta 201 Created com os dados do novo Transportador.
+     * @param pessoaId O ID da Pessoa que receberá o perfil.
+     * @return Resposta 201 Created com os dados do Transportador.
      */
-    @Operation(summary = "Converte um usuário Lead em Transportador", description = "Cria a entidade Transportador e associa o perfil correspondente ('TRANSPORTADOR') à Pessoa existente. Também atualiza o status 'isColaborador' da pessoa para true.")
-    @PostMapping("/converter/{pessoaId}")
-    public ResponseEntity<TransportadorResponse> converterLeadEmTransportador(@PathVariable Long pessoaId) {
-        TransportadorResponse response = transportadorService.converterLeadEmTransportador(pessoaId);
+    @Operation(summary = "Adiciona o perfil de Transportador a um usuário existente", description = "Cria a entidade Transportador (se não existir) e associa o perfil 'TRANSPORTADOR' à Pessoa. Permite que um usuário acumule múltiplas funções no sistema.")
+    @PostMapping("/adicionar-perfil/{pessoaId}")
+    public ResponseEntity<TransportadorResponse> adicionarPerfilTransportador(@PathVariable Long pessoaId) {
+        // CHAMADA DO NOVO MÉTODO
+        TransportadorResponse response = transportadorService.adicionarPerfilTransportador(pessoaId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

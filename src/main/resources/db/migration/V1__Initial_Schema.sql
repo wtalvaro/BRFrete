@@ -152,16 +152,18 @@ CREATE TYPE colaboradores.tipo_veiculo_enum AS ENUM (
 CREATE TABLE core.pessoas (
 	pessoa_id bigserial NOT NULL,
 	nome varchar(255) NOT NULL,
-	documento varchar(18) NOT NULL,
+	documento varchar(18) NULL,
+    social_id VARCHAR(255) UNIQUE,
 	email varchar(100) NOT NULL,
 	telefone varchar(20) NULL,
 	senha varchar(255) NOT NULL,
-    data_nascimento DATE,
+    data_nascimento DATE NULL,
 	data_cadastro timestamp DEFAULT now() NULL,
 	ativo bool DEFAULT false NOT NULL,
 	is_colaborador bool DEFAULT false NOT NULL,
 	is_cliente bool DEFAULT false NOT NULL,
 	CONSTRAINT pessoas_documento_key UNIQUE (documento),
+    CONSTRAINT pessoas_social_id_key UNIQUE (social_id), -- GARANTIR UNICIDADE NO SOCIAL ID
 	CONSTRAINT pessoas_email_key UNIQUE (email),
     -- Usa o operador ~* para Regex case-insensitive
     CONSTRAINT chk_email_valido
@@ -516,15 +518,6 @@ CREATE TABLE social.seguidores (
     CONSTRAINT check_self_follow CHECK (seguidor_id <> seguido_id)
 );
 
--- Adicionar a nova coluna 'social_id' à tabela core.pessoas
--- O Google ID (sub) é geralmente uma string de 21 caracteres, 255 é seguro.
-ALTER TABLE core.pessoas
-ADD COLUMN social_id VARCHAR(255) UNIQUE;
-
--- Tornar a coluna 'documento' NULA/OPCIONAL
--- Isto é crucial, pois um registo social via Google pode não ter um documento na hora.
-ALTER TABLE core.pessoas
-ALTER COLUMN documento DROP NOT NULL;
 
 -- Inserção dos Papéis de Permissão (ROLES) na tabela core.perfis
 -- Estes são dados estáticos e essenciais para a segurança do sistema.

@@ -39,62 +39,64 @@ public class TransportadorService {
     }
 
     /**
-     * Documentação: Método para converter um usuário (Lead/Pessoa) em um
-     * Transportador.
-     * O fluxo garante que a Pessoa exista, não seja um Transportador, cria a
-     * entidade Transportador,
-     * associa o perfil 'TRANSPORTADOR' e marca a Pessoa como colaboradora.
-     *
-     * @param pessoaId O ID da pessoa existente (Lead) no sistema.
+     * Documentação: Método para ADICIONAR o perfil de Transportador a um usuário
+     * Pessoa existente.
+     * O fluxo garante que a Pessoa exista e, caso o registro de Transportador
+     * (entidade) não exista, ele será criado.
+     * 
+     * @param pessoaId O ID da pessoa existente que receberá o perfil.
+     * 
      * @return TransportadorResponse com os dados do novo transportador.
-     * @throws InvalidDataException se a Pessoa não for encontrada, já for um
-     *                              Transportador ou o Perfil não existir.
+     * @throws InvalidDataException se a Pessoa não for encontrada ou o Perfil não
+     *                              existir.
      */
     @SuppressWarnings("null")
     @Transactional
-    public TransportadorResponse converterLeadEmTransportador(Long pessoaId) {
+    public TransportadorResponse adicionarPerfilTransportador(Long pessoaId) {
         // 1. Busca e Validação da Pessoa
         Pessoa pessoa = pessoaRepository.findById(pessoaId)
                 .orElseThrow(() -> new InvalidDataException("Pessoa com ID " + pessoaId + " não encontrada.",
                         "PERSON_NOT_FOUND"));
 
-        // 2. Valida se a Pessoa já é um Transportador
-        Optional<Transportador> transportadorExistente = transportadorRepository.findByPessoaId(pessoaId);
-        if (transportadorExistente.isPresent()) {
-            throw new InvalidDataException("A Pessoa com ID " + pessoaId + " já está cadastrada como Transportador.",
-                    "ALREADY_TRANSPORTADOR");
-        }
-
-        // 3. Busca o Perfil 'TRANSPORTADOR'
-        // Agora usa Optional<Perfil> do repositório corrigido (Passo 1B)
+        // 2. Busca o Perfil 'TRANSPORTADOR'
         Perfil perfilTransportador = perfilRepository.findByNomePerfil("TRANSPORTADOR")
                 .orElseThrow(() -> new InvalidDataException(
                         "Perfil 'TRANSPORTADOR' não encontrado no sistema. Verifique a tabela 'core.perfis'.",
                         "PROFILE_NOT_FOUND"));
 
-        // 4. Cria a nova entidade Transportador
-        Transportador novoTransportador = new Transportador();
-        novoTransportador.setPessoa(pessoa);
-        // dataCadastro foi removido, pois a entidade Transportador.java não o possui.
+        // 3. Verifica se o registro de Transportador JÁ EXISTE e cria se necessário.
+        Optional<Transportador> transportadorExistente = transportadorRepository.findByPessoaId(pessoaId);
+        Transportador transportador = transportadorExistente.orElseGet(() -> {
+            Transportador novoTransportador = new Transportador();
+            novoTransportador.setPessoa(pessoa);
+            // Defina outros campos iniciais, se houver
+            return transportadorRepository.save(novoTransportador);
+        });
 
-        // 5. Salva o Transportador
-        novoTransportador = transportadorRepository.save(novoTransportador);
+        // Se já existe, apenas prossegue para adicionar o perfil.
 
-        // 6. Adiciona o Perfil de Transportador à Pessoa
+        // 4. Adiciona/Atualiza o Perfil de Transportador à Pessoa
+        // Usamos PessoaPerfilId para garantir a unicidade da associação
         PessoaPerfilId pessoaPerfilId = new PessoaPerfilId(pessoaId, perfilTransportador.getId());
 
-        PessoaPerfil pessoaPerfil = new PessoaPerfil();
-        pessoaPerfil.setId(pessoaPerfilId);
-        pessoaPerfil.setPessoa(pessoa);
-        pessoaPerfil.setPerfil(perfilTransportador);
+        // Tentamos carregar a associação existente ou criamos uma nova
+        Optional<PessoaPerfil> associacaoExistente = pessoaPerfilRepository.findById(pessoaPerfilId);
 
-        pessoaPerfilRepository.save(pessoaPerfil);
+        if (associacaoExistente.isEmpty()) {
+            PessoaPerfil novaPessoaPerfil = new PessoaPerfil();
+            novaPessoaPerfil.setId(pessoaPerfilId);
+            novaPessoaPerfil.setPessoa(pessoa);
+            novaPessoaPerfil.setPerfil(perfilTransportador);
+            pessoaPerfilRepository.save(novaPessoaPerfil);
+        }
 
-        // 7. Atualiza o flag isColaborador na Pessoa
-        pessoa.setColaborador(true); // Correção do setter Lombok
-        pessoaRepository.save(pessoa);
+        // 5. Atualiza o flag isColaborador na Pessoa (se já não for colaborador)
+        if (!pessoa.isColaborador()) {
+            pessoa.setColaborador(true);
+            pessoaRepository.save(pessoa);
+        }
 
-        // 8. Mapeia e retorna a resposta
-        return transportadorMapper.toResponse(novoTransportador);
+        // 6. Mapeia e retorna a resposta
+        return transportadorMapper.toResponse(transportador);
     }
 }
