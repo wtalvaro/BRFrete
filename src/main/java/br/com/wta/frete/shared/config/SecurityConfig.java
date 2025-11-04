@@ -65,19 +65,20 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/login",
+                                                                // NOVO: Permite acesso a todos os endpoints da API para
+                                                                // desenvolvimento
+                                                                "/api/**",
                                                                 "/api/pessoas/cadastro/**",
                                                                 "/api/v1/ativacao/**",
                                                                 "/public/**",
-                                                                // Adicionado para seguir a recomendação do Spring:
+                                                                // URLs estáticas
                                                                 "/favicon.ico",
                                                                 "/css/**",
                                                                 "/js/**",
                                                                 "/images/**",
                                                                 "/webjars/**")
                                                 .permitAll()
-                                                // Rotas Protegidas: Exige que o utilizador esteja autenticado para
-                                                // todas as
-                                                // outras URLs
+                                                // Rotas Protegidas (apenas o que não é /api/** estará aqui)
                                                 .anyRequest().authenticated())
 
                                 // 3. Configuração do Fluxo de Login OAuth2
