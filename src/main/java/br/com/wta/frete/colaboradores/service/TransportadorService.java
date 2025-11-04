@@ -1,48 +1,100 @@
 package br.com.wta.frete.colaboradores.service;
 
+import br.com.wta.frete.colaboradores.controller.dto.TransportadorResponse;
 import br.com.wta.frete.colaboradores.entity.Transportador;
 import br.com.wta.frete.colaboradores.repository.TransportadorRepository;
+import br.com.wta.frete.colaboradores.service.mapper.TransportadorMapper;
+import br.com.wta.frete.core.entity.Pessoa;
+import br.com.wta.frete.core.entity.Perfil;
+import br.com.wta.frete.core.entity.PessoaPerfil;
+import br.com.wta.frete.core.entity.PessoaPerfilId;
+import br.com.wta.frete.core.repository.PessoaRepository;
+import br.com.wta.frete.core.repository.PerfilRepository;
+import br.com.wta.frete.core.repository.PessoaPerfilRepository;
+import br.com.wta.frete.shared.exception.InvalidDataException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class TransportadorService {
 
     private final TransportadorRepository transportadorRepository;
+    private final TransportadorMapper transportadorMapper;
+    private final PessoaRepository pessoaRepository;
+    private final PerfilRepository perfilRepository;
+    private final PessoaPerfilRepository pessoaPerfilRepository;
 
-    public TransportadorService(TransportadorRepository transportadorRepository) {
+    public TransportadorService(TransportadorRepository transportadorRepository,
+            TransportadorMapper transportadorMapper,
+            PessoaRepository pessoaRepository,
+            PerfilRepository perfilRepository,
+            PessoaPerfilRepository pessoaPerfilRepository) {
         this.transportadorRepository = transportadorRepository;
+        this.transportadorMapper = transportadorMapper;
+        this.pessoaRepository = pessoaRepository;
+        this.perfilRepository = perfilRepository;
+        this.pessoaPerfilRepository = pessoaPerfilRepository;
     }
 
     /**
-     * Cria o registro específico na tabela 'colaboradores.transportadores'. O ID da
-     * Pessoa deve existir em core.pessoas antes desta chamada. * @param pessoaId O
-     * ID da pessoa (chave primária e estrangeira).
-     * 
-     * @param licenca O número da licença de transporte.
-     * @return A entidade Transportador criada.
+     * Documentação: Método para converter um usuário (Lead/Pessoa) em um
+     * Transportador.
+     * O fluxo garante que a Pessoa exista, não seja um Transportador, cria a
+     * entidade Transportador,
+     * associa o perfil 'TRANSPORTADOR' e marca a Pessoa como colaboradora.
+     *
+     * @param pessoaId O ID da pessoa existente (Lead) no sistema.
+     * @return TransportadorResponse com os dados do novo transportador.
+     * @throws InvalidDataException se a Pessoa não for encontrada, já for um
+     *                              Transportador ou o Perfil não existir.
      */
     @SuppressWarnings("null")
     @Transactional
-    public Transportador criarRegistro(Long pessoaId, String licenca) {
+    public TransportadorResponse converterLeadEmTransportador(Long pessoaId) {
+        // 1. Busca e Validação da Pessoa
+        Pessoa pessoa = pessoaRepository.findById(pessoaId)
+                .orElseThrow(() -> new InvalidDataException("Pessoa com ID " + pessoaId + " não encontrada.",
+                        "PERSON_NOT_FOUND"));
 
-        // 1. Verificação de Unicidade (Opcional, mas seguro):
-        // Garante que a pessoa ainda não é um transportador.
-        if (transportadorRepository.existsById(pessoaId)) {
-            // Lançar exceção ou tratar o caso de re-registro.
-            throw new IllegalArgumentException("O ID da Pessoa já está registrado como Transportador.");
+        // 2. Valida se a Pessoa já é um Transportador
+        Optional<Transportador> transportadorExistente = transportadorRepository.findByPessoaId(pessoaId);
+        if (transportadorExistente.isPresent()) {
+            throw new InvalidDataException("A Pessoa com ID " + pessoaId + " já está cadastrada como Transportador.",
+                    "ALREADY_TRANSPORTADOR");
         }
 
-        // 2. Criação da Entidade
-        Transportador transportador = new Transportador();
+        // 3. Busca o Perfil 'TRANSPORTADOR'
+        // Agora usa Optional<Perfil> do repositório corrigido (Passo 1B)
+        Perfil perfilTransportador = perfilRepository.findByNomePerfil("TRANSPORTADOR")
+                .orElseThrow(() -> new InvalidDataException(
+                        "Perfil 'TRANSPORTADOR' não encontrado no sistema. Verifique a tabela 'core.perfis'.",
+                        "PROFILE_NOT_FOUND"));
 
-        // Mapeia o ID: Esta é a chave primária e a FK para core.pessoas.
-        transportador.setPessoaId(pessoaId);
+        // 4. Cria a nova entidade Transportador
+        Transportador novoTransportador = new Transportador();
+        novoTransportador.setPessoa(pessoa);
+        // dataCadastro foi removido, pois a entidade Transportador.java não o possui.
 
-        // Registra o campo específico do colaborador
-        transportador.setLicencaTransporte(licenca); // Mapeia para licenca_transporte
+        // 5. Salva o Transportador
+        novoTransportador = transportadorRepository.save(novoTransportador);
 
-        // 3. Persistência
-        return transportadorRepository.save(transportador);
+        // 6. Adiciona o Perfil de Transportador à Pessoa
+        PessoaPerfilId pessoaPerfilId = new PessoaPerfilId(pessoaId, perfilTransportador.getId());
+
+        PessoaPerfil pessoaPerfil = new PessoaPerfil();
+        pessoaPerfil.setId(pessoaPerfilId);
+        pessoaPerfil.setPessoa(pessoa);
+        pessoaPerfil.setPerfil(perfilTransportador);
+
+        pessoaPerfilRepository.save(pessoaPerfil);
+
+        // 7. Atualiza o flag isColaborador na Pessoa
+        pessoa.setColaborador(true); // Correção do setter Lombok
+        pessoaRepository.save(pessoa);
+
+        // 8. Mapeia e retorna a resposta
+        return transportadorMapper.toResponse(novoTransportador);
     }
 }

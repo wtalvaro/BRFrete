@@ -76,8 +76,9 @@ public class PessoaSocialServiceTest {
         // Simulação 1.4: Simular o PerfilRepository
         Perfil perfilPadrao = new Perfil();
         perfilPadrao.setNomePerfil("LEAD");
-        when(perfilRepository.findByNomePerfil(anyString())).thenReturn(perfilPadrao);
-
+        // CORREÇÃO: Envolver o retorno da Entidade Perfil em um Optional.of()
+        when(perfilRepository.findByNomePerfil("LEAD")).thenReturn(Optional.of(perfilPadrao));
+        
         // Simulação 1.5: Simula que o repositório SALVA e retorna a entidade com o ID
         // gerado.
         when(pessoaRepository.save(any(Pessoa.class))).thenAnswer(invocation -> {

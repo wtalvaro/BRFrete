@@ -4,22 +4,24 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import br.com.wta.frete.colaboradores.entity.Veiculo;
-
-import java.util.List;
+import java.util.Optional;
 
 /**
  * Repositório para a entidade Veiculo (colaboradores.veiculos).
+ * CORREÇÃO: Métodos de busca ajustados para usar 'Placa' e 'Renavam'.
  */
 @Repository
 public interface VeiculoRepository extends JpaRepository<Veiculo, Integer> {
 
 	/**
-	 * Busca um veículo pela sua matrícula (placa).
+	 * Documentação: Busca um veículo pela sua placa. Necessário para a validação
+	 * de unicidade no cadastro.
 	 */
-	Veiculo findByMatricula(String matricula);
+	Optional<Veiculo> findByPlaca(String placa); // CORRIGIDO: findByMatricula -> findByPlaca
 
 	/**
-	 * Busca todos os veículos de um Transportador específico.
+	 * Documentação: Busca um veículo pelo seu Renavam. Necessário para a validação
+	 * de unicidade no cadastro.
 	 */
-	List<Veiculo> findByTransportadorPessoaId(Long transportadorPessoaId);
+	Optional<Veiculo> findByRenavam(String renavam);
 }

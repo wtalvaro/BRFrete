@@ -79,11 +79,12 @@ public class PessoaSocialService {
                     novaPessoa.setColaborador(false);
 
                     // <<--- CORREÇÃO 3: ATRIBUIÇÃO DO PERFIL PADRÃO "LEAD" (BUG FIX)
-                    Perfil perfilPadrao = perfilRepository.findByNomePerfil("LEAD");
-                    if (perfilPadrao == null) {
-                        throw new IllegalStateException(
-                                "Perfil 'LEAD' não encontrado. Verifique a inicialização de dados.");
-                    }
+                    // CORREÇÃO: Usando .orElseThrow() para obter Perfil de Optional<Perfil>
+                    Perfil perfilPadrao = perfilRepository.findByNomePerfil("LEAD")
+                            .orElseThrow(() -> new IllegalStateException(
+                                    "Perfil 'LEAD' não encontrado. Verifique a inicialização de dados."));
+
+                    // Remoção da verificação 'if (perfilPadrao == null)' redundante.
                     PessoaPerfil pessoaPerfil = new PessoaPerfil(novaPessoa, perfilPadrao);
                     Set<PessoaPerfil> perfis = new HashSet<>();
                     perfis.add(pessoaPerfil);

@@ -113,11 +113,12 @@ public class CadastroPessoaService {
         novaPessoa.setSenha(senhaHash);
 
         // 4. ATRIBUIÇÃO DO PERFIL PADRÃO ('LEAD')
-        Perfil perfilPadrao = perfilRepository.findByNomePerfil("LEAD");
-        if (perfilPadrao == null) {
-            throw new IllegalStateException(
-                    "Perfil 'LEAD' não encontrado no banco. Verifique a inicialização de dados.");
-        }
+        // CORREÇÃO: Usando .orElseThrow() para obter Perfil de Optional<Perfil>
+        Perfil perfilPadrao = perfilRepository.findByNomePerfil("LEAD")
+                .orElseThrow(() -> new IllegalStateException(
+                        "Perfil 'LEAD' não encontrado no banco. Verifique a inicialização de dados."));
+
+        // Remoção da verificação 'if (perfilPadrao == null)' redundante.
 
         // Criação e associação do perfil
         PessoaPerfil pessoaPerfil = new PessoaPerfil(novaPessoa, perfilPadrao);

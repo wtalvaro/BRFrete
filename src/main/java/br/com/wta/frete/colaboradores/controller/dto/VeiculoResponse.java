@@ -1,30 +1,43 @@
 package br.com.wta.frete.colaboradores.controller.dto;
 
 import java.math.BigDecimal;
+// Novos Imports para os Enums (melhor para o consumidor da API)
+import br.com.wta.frete.colaboradores.entity.enums.StatusVeiculo;
+import br.com.wta.frete.colaboradores.entity.enums.TipoVeiculo;
 
 /**
- * DTO de Resposta para a entidade Veículo (colaboradores.veiculos). Retorna os
- * detalhes e capacidades de um veículo de transporte cadastrado.
+ * DTO de Resposta para a entidade Veículo (colaboradores.veiculos).
+ * CORREÇÃO: Estrutura atualizada para refletir todos os campos da entidade
+ * Veiculo.
  */
 public record VeiculoResponse(
-		// Chave primária do veículo (renomeado de 'id')
-		Long veiculoId,
+		// Chave primária do veículo
+		Integer veiculoId, // Alterado para Integer, tipo da PK na Entidade Veiculo
 
-		// ID da Pessoa Transportadora associada
+		// ID da Pessoa Transportadora associada (Chave Estrangeira)
 		Long transportadorPessoaId,
 
-		// Placa ou matrícula do veículo (UNIQUE)
-		String matricula,
+		// CORRIGIDO: Placa (VARCHAR(10) UNIQUE NOT NULL)
+		String placa,
 
-		// Tipo do veículo (ex: TRUCK, VAN, MOTO)
-		String tipoVeiculo,
+		// NOVO CAMPO: Renavam (VARCHAR(11) UNIQUE NOT NULL)
+		String renavam,
 
-		// Capacidade máxima de peso em KG (NUMERIC)
-		BigDecimal capacidadePesoKg,
+		// Tipo do veículo (Enum)
+		TipoVeiculo tipoVeiculo, // Alterado para TipoVeiculo (Enum)
 
-		// Capacidade máxima de volume em M3 (NUMERIC)
-		BigDecimal capacidadeVolumeM3,
+		// NOVO CAMPO: Ano de fabricação (INTEGER)
+		Integer anoFabricacao,
 
-		// Status do veículo (ex: ATIVO, MANUTENCAO, INATIVO)
-		String statusVeiculo) {
+		// CORRIGIDO: Capacidade máxima de peso em KG
+		BigDecimal capacidadeKg,
+
+		// CORRIGIDO: Capacidade máxima de volume em M3
+		BigDecimal capacidadeM3,
+
+		// NOVO CAMPO: Possui Rastreador (BOOLEAN)
+		Boolean possuiRastreador,
+
+		// Status do veículo (Enum)
+		StatusVeiculo statusVeiculo) { // Alterado para StatusVeiculo (Enum)
 }
