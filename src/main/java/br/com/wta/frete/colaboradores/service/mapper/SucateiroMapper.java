@@ -1,14 +1,14 @@
 package br.com.wta.frete.colaboradores.service.mapper;
 
-import br.com.wta.frete.colaboradores.controller.dto.SucateiroRequest;
-import br.com.wta.frete.colaboradores.controller.dto.SucateiroResponse;
-import br.com.wta.frete.colaboradores.entity.Sucateiro;
-import br.com.wta.frete.core.service.mapper.PessoaMapper;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
+
+import br.com.wta.frete.colaboradores.controller.dto.SucateiroRequest;
+import br.com.wta.frete.colaboradores.controller.dto.SucateiroResponse;
+import br.com.wta.frete.colaboradores.entity.Sucateiro;
+import br.com.wta.frete.core.service.mapper.PessoaMapper;
 
 /**
  * Interface Mapper para converter entre a Entidade Sucateiro e seus DTOs.
@@ -37,8 +37,7 @@ public interface SucateiroMapper {
 	 * Atualiza uma Entidade Sucateiro existente com os dados de um
 	 * SucateiroRequest.
 	 */
-	// REMOVIDA A ANOTAÇÃO DE MAPPING: 'enderecoPatio' é mapeado automaticamente.
-	@Mapping(target = "pessoaId", ignore = true)
-	@Mapping(target = "pessoa", ignore = true)
-	void updateEntityFromRequest(SucateiroRequest request, @MappingTarget Sucateiro target);
+	@Mapping(target = "pessoaId", ignore = true) // Não deve atualizar o ID da Pessoa
+	@Mapping(target = "pessoa", ignore = true) // Não deve atualizar o objeto Pessoa
+	void updateEntity(SucateiroRequest dto, @MappingTarget Sucateiro entity);
 }

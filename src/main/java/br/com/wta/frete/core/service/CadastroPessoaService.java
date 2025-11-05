@@ -112,20 +112,30 @@ public class CadastroPessoaService {
         String senhaHash = passwordEncoder.encode(senhaPlana);
         novaPessoa.setSenha(senhaHash);
 
-        // 4. ATRIBUIÇÃO DO PERFIL PADRÃO ('LEAD')
-        // CORREÇÃO: Usando .orElseThrow() para obter Perfil de Optional<Perfil>
-        Perfil perfilPadrao = perfilRepository.findByNomePerfil("LEAD")
+        // 4. ATRIBUIÇÃO DOS PERFIS PADRÕES ('LEAD' e 'CLIENTE')
+
+        // 4.1. Busca o perfil LEAD (Perfil padrão inicial)
+        Perfil perfilLead = perfilRepository.findByNomePerfil("LEAD")
                 .orElseThrow(() -> new IllegalStateException(
                         "Perfil 'LEAD' não encontrado no banco. Verifique a inicialização de dados."));
 
-        // Remoção da verificação 'if (perfilPadrao == null)' redundante.
+        // NOVO: 4.2. Busca o perfil CLIENTE
+        Perfil perfilCliente = perfilRepository.findByNomePerfil("CLIENTE")
+                .orElseThrow(() -> new IllegalStateException(
+                        "Perfil 'CLIENTE' não encontrado no banco. Verifique a inicialização de dados."));
 
-        // Criação e associação do perfil
-        PessoaPerfil pessoaPerfil = new PessoaPerfil(novaPessoa, perfilPadrao);
+        // 4.3. Criação e associação dos perfis
         Set<PessoaPerfil> perfis = new HashSet<>();
-        perfis.add(pessoaPerfil);
+
+        // Adiciona LEAD
+        perfis.add(new PessoaPerfil(novaPessoa, perfilLead));
+
+        // Adiciona CLIENTE
+        perfis.add(new PessoaPerfil(novaPessoa, perfilCliente));
+
         novaPessoa.setPerfis(perfis);
-        novaPessoa.setCliente(false);
+        novaPessoa.setCliente(true); // ALTERADO: Define o usuário como cliente em qualquer
+                                     // cadastro.novaPessoa.setColaborador(false);
         novaPessoa.setColaborador(false);
 
         // 5. SALVAR NO BANCO DE DADOS (Pessoa ID é gerado aqui)

@@ -254,8 +254,29 @@ CREATE TABLE colaboradores.lojistas (
     pessoa_id BIGINT PRIMARY KEY,
     nome_loja VARCHAR(255) NOT NULL,
     endereco_coleta TEXT NOT NULL,
-    horario_atendimento VARCHAR(100),
+    versao INTEGER DEFAULT 0,
     FOREIGN KEY (pessoa_id) REFERENCES core.pessoas(pessoa_id) ON DELETE CASCADE
+);
+
+CREATE TABLE colaboradores.horarios_operacao (
+    horario_id BIGSERIAL PRIMARY KEY,
+    
+    -- Chave estrangeira que aponta para o colaborador (Lojista ou Sucateiro)
+    pessoa_id BIGINT NOT NULL,  
+    
+    dia_semana SMALLINT NOT NULL, -- 1=Domingo, 2=Segunda, ..., 7=Sábado
+    
+    hora_abertura TIME WITHOUT TIME ZONE NOT NULL,
+    hora_fechamento TIME WITHOUT TIME ZONE NOT NULL,
+    
+    -- Restrições
+    CONSTRAINT fk_colaborador_horario
+        FOREIGN KEY (pessoa_id) 
+        REFERENCES core.pessoas(pessoa_id) 
+        ON DELETE CASCADE,
+        
+    -- Garante que não haja horários duplicados (abertura/fechamento) para o mesmo dia e colaborador
+    UNIQUE (pessoa_id, dia_semana, hora_abertura) 
 );
 
 CREATE TABLE colaboradores.catadores (

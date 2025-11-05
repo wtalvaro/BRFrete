@@ -96,7 +96,7 @@ public class Pessoa {
 		this.ativo = false; // Garante que a entidade começa como inativa
 		this.dataCadastro = LocalDateTime.now();
 		this.isColaborador = false;
-		this.isCliente = false;
+		this.isCliente = true; // ALTERADO: Agora, o padrão é ser cliente.;
 	}
 
 	/**

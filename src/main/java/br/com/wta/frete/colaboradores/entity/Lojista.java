@@ -1,15 +1,27 @@
 package br.com.wta.frete.colaboradores.entity;
 
 import br.com.wta.frete.core.entity.Pessoa;
-import jakarta.persistence.*;
+// 💡 Importação Adicional!
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
- * [cite_start]Mapeia a tabela 'colaboradores.lojistas'[cite: 8]. Especialização
- * de Pessoa para vendedores/lojistas no marketplace. [cite_start]Relacionamento
- * 1:1 com Pessoa via chave compartilhada (@MapsId)[cite: 22].
+ * Mapeia a tabela 'colaboradores.lojistas'. Especialização de Pessoa
+ * para vendedores/lojistas no marketplace. Relacionamento 1:1 com Pessoa via
+ * chave compartilhada (@MapsId).
+ *
+ * 💡 ATUALIZAÇÃO: Campo 'horarioAtendimento' removido para usar a entidade
+ * HorarioOperacao generalizada.
  */
 @Entity
 @Table(name = "lojistas", schema = "colaboradores")
@@ -19,15 +31,15 @@ import lombok.AllArgsConstructor;
 public class Lojista {
 
 	/**
-	 * Chave primária (pessoa_id BIGINT). [cite_start]Herda a chave primária da
-	 * entidade Pessoa[cite: 22].
+	 * Chave primária (pessoa_id BIGINT). Herda a chave primária da entidade Pessoa
+	 * .
 	 */
 	@Id
 	@Column(name = "pessoa_id")
 	private Long pessoaId;
 
 	/**
-	 * [cite_start]Relacionamento Um-para-Um com Pessoa[cite: 22].
+	 * Relacionamento Um-para-Um com Pessoa.
 	 */
 	@OneToOne(fetch = FetchType.LAZY)
 	@MapsId
@@ -35,21 +47,27 @@ public class Lojista {
 	private Pessoa pessoa;
 
 	/**
-	 * [cite_start]Nome da loja ou fantasia (VARCHAR(255) NOT NULL)[cite: 22].
+	 * Nome da loja ou fantasia (VARCHAR(255) NOT NULL).
 	 */
 	@Column(name = "nome_loja", nullable = false, length = 255)
 	private String nomeLoja;
 
 	/**
-	 * [cite_start]Endereço principal para coleta/entrega da loja (TEXT NOT
-	 * NULL)[cite: 22].
+	 * Endereço principal para coleta/entrega da loja (TEXT NOT NULL).
 	 */
 	@Column(name = "endereco_coleta", nullable = false, columnDefinition = "TEXT")
 	private String enderecoColeta;
 
+	// =========================================================================
+	// 🛠️ NOVO CAMPO: Controle de Concorrência Otimista
+	// =========================================================================
+
 	/**
-	 * [cite_start]Horário de atendimento ou funcionamento (VARCHAR(100))[cite: 22].
+	 * Otimistic Locking: Campo gerenciado pelo JPA para controle de concorrência.
+	 * O Hibernate incrementa esta coluna automaticamente a cada update.
+	 * O nome da coluna no banco será 'versao'.
 	 */
-	@Column(name = "horario_atendimento", length = 100)
-	private String horarioAtendimento;
+	@Version
+	@Column(name = "versao")
+	private Integer versao;
 }
