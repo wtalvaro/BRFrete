@@ -1,14 +1,27 @@
 package br.com.wta.frete.colaboradores.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.math.BigDecimal;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import br.com.wta.frete.colaboradores.entity.enums.StatusVeiculo;
 import br.com.wta.frete.colaboradores.entity.enums.TipoVeiculo;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Mapeia a tabela 'colaboradores.veiculos'. Representa os veículos utilizados
@@ -60,6 +73,7 @@ public class Veiculo {
 	 * Tipo do veículo (colaboradores.tipo_veiculo_enum NOT NULL).
 	 */
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM) // Mapeia o ENUM corretamente para o PostgreSQL
 	@Column(name = "tipo_veiculo", nullable = false, length = 50)
 	private TipoVeiculo tipoVeiculo;
 
@@ -94,6 +108,7 @@ public class Veiculo {
 	 * 'DISPONIVEL').
 	 */
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM)
 	@Column(name = "status_veiculo", nullable = false, length = 20)
 	private StatusVeiculo statusVeiculo = StatusVeiculo.DISPONIVEL;
 }

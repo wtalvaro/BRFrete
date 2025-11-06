@@ -43,6 +43,7 @@ DROP TABLE IF EXISTS colaboradores.transportadores CASCADE;
 DROP TABLE IF EXISTS colaboradores.sucateiros CASCADE;
 DROP TABLE IF EXISTS colaboradores.lojistas CASCADE;
 DROP TABLE IF EXISTS colaboradores.catadores CASCADE;
+DROP TABLE IF EXISTS colaboradores.horarios_operacao CASCADE;
 
 -- SCHEMA CORE (Tabelas de Chat e MESTRAS)
 DROP TABLE IF EXISTS core.mensagens CASCADE; -- NOVO CHAT

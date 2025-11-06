@@ -1,13 +1,14 @@
 package br.com.wta.frete.colaboradores.controller.dto;
 
 import java.math.BigDecimal;
+
+import br.com.wta.frete.colaboradores.entity.enums.StatusVeiculo;
+import br.com.wta.frete.colaboradores.entity.enums.TipoVeiculo;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min; // Novo Import
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Min; // Novo Import
-import br.com.wta.frete.colaboradores.entity.enums.TipoVeiculo;
-import br.com.wta.frete.colaboradores.entity.enums.StatusVeiculo;
 
 /**
  * DTO de Requisição para receber dados de um novo Veículo

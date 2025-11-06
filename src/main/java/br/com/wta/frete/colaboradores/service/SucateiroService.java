@@ -50,6 +50,7 @@ public class SucateiroService {
      * @param request  Os dados obrigatórios para a entidade Sucateiro.
      * @return Um DTO de resposta do Sucateiro.
      */
+    @SuppressWarnings("null")
     @Transactional
     public SucateiroResponse adicionarPerfilSucateiro(Long pessoaId, SucateiroRequest request) {
         // 1. Valida se a Pessoa existe
