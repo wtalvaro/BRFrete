@@ -148,6 +148,18 @@ CREATE TYPE colaboradores.tipo_veiculo_enum AS ENUM (
     'GRANELEIRO'            -- Para grãos e produtos a granel
 );
 
+-- NOVO ENUM: colaboradores.dia_semana_enum (Para Horários de Operação)
+DROP TYPE IF EXISTS colaboradores.dia_semana_enum CASCADE;
+CREATE TYPE colaboradores.dia_semana_enum AS ENUM (
+    'DOMINGO',
+    'SEGUNDA',
+    'TERCA',
+    'QUARTA',
+    'QUINTA',
+    'SEXTA',
+    'SABADO'
+);
+
 -- ======================================================================
 -- 3. SCHEMA CORE: Identidades e Perfis M:M (Tabelas MESTRAS)
 -- ======================================================================
@@ -267,7 +279,8 @@ CREATE TABLE colaboradores.horarios_operacao (
     -- Chave estrangeira que aponta para o colaborador (Lojista ou Sucateiro)
     pessoa_id BIGINT NOT NULL,  
     
-    dia_semana SMALLINT NOT NULL, -- 1=Domingo, 2=Segunda, ..., 7=Sábado
+    -- COLUNA ATUALIZADA: Agora usa o novo tipo ENUM para garantir a validade dos dias
+    dia_semana colaboradores.dia_semana_enum NOT NULL, 
     
     hora_abertura TIME WITHOUT TIME ZONE NOT NULL,
     hora_fechamento TIME WITHOUT TIME ZONE NOT NULL,
@@ -279,6 +292,7 @@ CREATE TABLE colaboradores.horarios_operacao (
         ON DELETE CASCADE,
         
     -- Garante que não haja horários duplicados (abertura/fechamento) para o mesmo dia e colaborador
+    -- NOTA: O UNIQUE precisa ser ajustado pois o ENUM é uma string.
     UNIQUE (pessoa_id, dia_semana, hora_abertura) 
 );
 
@@ -455,7 +469,6 @@ CREATE TABLE logistica.cotacoes_materiais (
     unidade_medida VARCHAR(10) NOT NULL DEFAULT 'KG',
     data_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
 
 -- ======================================================================
 -- 6. SCHEMA LOGISTICA

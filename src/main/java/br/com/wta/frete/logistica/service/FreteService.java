@@ -1,5 +1,14 @@
 package br.com.wta.frete.logistica.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import br.com.wta.frete.logistica.controller.dto.FreteResponse;
 import br.com.wta.frete.logistica.controller.dto.ItemFreteRequest;
 import br.com.wta.frete.logistica.entity.Frete;
@@ -15,14 +24,6 @@ import br.com.wta.frete.logistica.service.mapper.FreteMapper;
 import br.com.wta.frete.logistica.service.mapper.ItemFreteMapper;
 import br.com.wta.frete.shared.exception.ResourceNotFoundException;
 import br.com.wta.frete.shared.service.GeoService;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Serviço responsável por criar o objeto Frete a partir de uma Ordem de Serviço
@@ -62,70 +63,54 @@ public class FreteService {
     }
 
     /**
-     * MÉTODO CENTRAL: Cria o Frete, calcula os custos e inicia o leilão.
-     * Chamado pelo OrdemServicoService.
+     * MÉTODO CENTRAL: Inicia o ciclo de leilão/cotação criando a entidade Frete.
+     * <p>
+     * Responsável pela orquestração da criação e persistência do Frete e seus
+     * itens,
+     * delegando todos os cálculos e inferências de regras de negócio (como a
+     * precificação)
+     * a métodos auxiliares para aderir ao SRP.
+     * </p>
      *
-     * @param ordemServico       Entidade OS persistida.
-     * @param itensFretpackage br.com.wta.frete.logistica.service;
-
-import br.com.wta.frete.logistica.entity.OrdemServico;
-import org.springframework.stereotype.Service;
-
-@Service
-public class FreteService {
-
-    // Adicione aqui as dependências necessárias do Frete (Repository, Mapper, etc.)
-    // public FreteService(...) { ... }
-
-    public void criarFrete(OrdemServico ordemServico) {
-        // Agora usa o método getId()
-        System.out.println("LOG: FreteService acionado para Ordem de Serviço ID: " + ordemServico.getId());
-        // **TODO: Implementar lógica de criação de Frete**
-    }
-
-    // Outros métodos de Frete (buscar, atualizar, etc.) serão adicionados depois.
-}eRequests DTOs dos itens a serem transportados.
+     * @param ordemServico           A Ordem de Serviço recém-criada.
+     * @param itensFreteRequests     DTOs dos itens a serem transportados.
+     * @param nomeModalidadeDesejada Nome da Modalidade de Frete a ser usada no
+     *                               Frete.
      * @return FreteResponse com os dados do leilão inicial.
+     * @throws ResourceNotFoundException Se o Status de Leilão ou a Modalidade de
+     *                                   Frete desejada não forem encontrados.
      */
     @Transactional
-    public FreteResponse criarFrete(OrdemServico ordemServico, List<ItemFreteRequest> itensFreteRequests) {
+    public FreteResponse criarFrete(
+            OrdemServico ordemServico,
+            List<ItemFreteRequest> itensFreteRequests,
+            String nomeModalidadeDesejada) { // <--- NOVO PARÂMETRO: Torna a escolha da modalidade flexível
 
-        // 1. CÁLCULO DE RECURSOS E DISTÂNCIA
-        BigDecimal pesoTotalKg = calcularPesoTotal(itensFreteRequests);
-        BigDecimal distanciaKm = geoService.calcularDistanciaRodoviaria(
-                ordemServico.getCepColeta(),
-                ordemServico.getCepDestino());
+        // 1. CÁLCULO DE PARÂMETROS E INFERÊNCIA DE RECURSOS (Lógica delegada)
+        FreteParametrosCalculados params = calcularParametrosIniciais(
+                ordemServico,
+                itensFreteRequests,
+                nomeModalidadeDesejada);
 
-        // 2. CÁLCULO DE PREÇOS BASE (LEGALIDADE)
-        // O ANTT Service está isolado e fornece o piso mínimo
-        BigDecimal anttPisoMinimo = anttService.calcularPisoMinimo(distanciaKm, pesoTotalKg);
-
-        // 3. OBTENÇÃO DE ENTIDADES MESTRAS (Iniciação do Leilão)
-        StatusLeilao statusInicial = buscarStatusLeilao("AGUARDANDO_LANCES");
-        // OBS: A modalidade deve ser determinada por regra de negócio (pode depender do
-        // peso total/volume)
-        ModalidadeFrete modalidadePadrao = buscarModalidadeFrete("FRACIONADO");
-
-        // 4. CRIAÇÃO DA ENTIDADE FRETE
+        // 2. CRIAÇÃO DA ENTIDADE FRETE (Orquestração)
         Frete novoFrete = new Frete();
         novoFrete.setOrdemServico(ordemServico);
-        novoFrete.setModalidade(modalidadePadrao);
-        novoFrete.setStatusLeilao(statusInicial);
-        novoFrete.setDistanciaKm(distanciaKm);
-        novoFrete.setAnttPisoMinimo(anttPisoMinimo);
 
-        // Lógica de Preço Sugerido (Mercado)
-        // Exemplo: 20% acima do piso ANTT para atrair a atenção dos transportadores
-        BigDecimal precoSugerido = anttPisoMinimo.multiply(new BigDecimal("1.20")).setScale(2, RoundingMode.HALF_UP);
-        novoFrete.setPrecoSugerido(precoSugerido);
-        novoFrete.setCustoBaseMercado(precoSugerido);
+        // Aplica os parâmetros calculados/inferidos
+        novoFrete.setModalidade(params.modalidade);
+        novoFrete.setStatusLeilao(params.statusInicial);
+        novoFrete.setDistanciaKm(params.distanciaKm);
+        novoFrete.setAnttPisoMinimo(params.anttPisoMinimo);
+        novoFrete.setPrecoSugerido(params.precoSugerido);
+        novoFrete.setCustoBaseMercado(params.custoBaseMercado);
+        novoFrete.setDataExpiracaoNegociacao(params.dataExpiracaoNegociacao);
 
-        // Define a data de expiração da negociação (Ex: 48 horas após a criação)
-        novoFrete.setDataExpiracaoNegociacao(LocalDateTime.now().plusHours(48));
+        // ** (Os campos que antes estavam no Frete.java mas não foram mais fornecidos
+        // são omitidos daqui. Ex: setTipoEmbalagem) **
 
         Frete freteSalvo = freteRepository.save(novoFrete);
 
-        // 5. CRIAÇÃO E ASSOCIAÇÃO DOS ITENS DE FRETE
+        // 3. CRIAÇÃO E ASSOCIAÇÃO DOS ITENS DE FRETE (Lógica delegada)
         salvarItensFrete(freteSalvo, itensFreteRequests);
 
         return freteMapper.toResponse(freteSalvo);
@@ -142,7 +127,68 @@ public class FreteService {
         return freteMapper.toResponse(frete);
     }
 
-    // --- MÉTODOS AUXILIARES PRIVADOS ---
+    // --- MÉTODOS AUXILIARES PRIVADOS (Aumento de SRP) ---
+
+    /**
+     * Estrutura interna para encapsular todos os parâmetros calculados/inferidos.
+     */
+    private record FreteParametrosCalculados(
+            BigDecimal pesoTotalKg,
+            BigDecimal distanciaKm,
+            BigDecimal anttPisoMinimo,
+            BigDecimal precoSugerido,
+            BigDecimal custoBaseMercado,
+            LocalDateTime dataExpiracaoNegociacao,
+            StatusLeilao statusInicial,
+            ModalidadeFrete modalidade) {
+    }
+
+    /**
+     * Responsabilidade: Realiza todos os cálculos e inferências de regras de
+     * negócio
+     * (peso, distância, preços, lookup de entidades mestre).
+     */
+    private FreteParametrosCalculados calcularParametrosIniciais(
+            OrdemServico ordemServico,
+            List<ItemFreteRequest> itensFreteRequests,
+            String nomeModalidadeDesejada) {
+
+        // 1. CÁLCULO DE RECURSOS E DISTÂNCIA
+        BigDecimal pesoTotalKg = calcularPesoTotal(itensFreteRequests);
+        BigDecimal distanciaKm = geoService.calcularDistanciaRodoviaria(
+                ordemServico.getCepColeta(),
+                ordemServico.getCepDestino());
+
+        // 2. CÁLCULO DE PREÇOS BASE (LEGALIDADE)
+        BigDecimal anttPisoMinimo = anttService.calcularPisoMinimo(distanciaKm, pesoTotalKg);
+
+        // 3. OBTENÇÃO DE ENTIDADES MESTRAS (Status e Modalidade)
+        StatusLeilao statusInicial = buscarStatusLeilao("AGUARDANDO_LANCES");
+
+        // FLEXIBILIDADE: A modalidade é determinada pelo parâmetro de entrada
+        ModalidadeFrete modalidade = buscarModalidadeFrete(nomeModalidadeDesejada);
+
+        // 4. Lógica de Preço Sugerido (Mercado)
+        // Exemplo: 20% acima do piso ANTT
+        BigDecimal precoSugerido = anttPisoMinimo.multiply(new BigDecimal("1.20")).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal custoBaseMercado = precoSugerido;
+
+        // 5. Define a data de expiração
+        LocalDateTime dataExpiracaoNegociacao = LocalDateTime.now().plusHours(48);
+
+        return new FreteParametrosCalculados(
+                pesoTotalKg,
+                distanciaKm,
+                anttPisoMinimo,
+                precoSugerido,
+                custoBaseMercado,
+                dataExpiracaoNegociacao,
+                statusInicial,
+                modalidade);
+    }
+
+    // ... (restante dos métodos auxiliares, buscarPesoTotal, salvarItensFrete,
+    // buscarStatusLeilao, buscarModalidadeFrete inalterados) ...
 
     private BigDecimal calcularPesoTotal(List<ItemFreteRequest> itens) {
         return itens.stream()

@@ -20,16 +20,22 @@ public record OrdemServicoRequest(
 		// FK opcional para o Transportador (se já atribuído, pode ser null)
 		Long transportadorDesignadoId,
 
+		// Data prevista para coleta
 		@NotNull(message = "A data prevista para coleta é obrigatória") LocalDate dataPrevistaColeta,
 
+		// Localização
 		@NotBlank(message = "O endereço de coleta é obrigatório") String enderecoColeta,
-
 		@NotBlank(message = "O CEP de coleta é obrigatório") @Size(min = 8, max = 8, message = "O CEP deve ter 8 dígitos") String cepColeta,
-
 		@NotBlank(message = "O CEP de destino é obrigatório") @Size(min = 8, max = 8, message = "O CEP deve ter 8 dígitos") String cepDestino,
 
-		// Lista de itens a serem transportados (Necessário para o FreteService)
-		@NotNull(message = "Pelo menos um item de frete é obrigatório.") @Size(min = 1, message = "A Ordem de Serviço deve ter pelo menos um item.") List<ItemFreteRequest> itensFrete
+		// Detalhe de Precificação
+		/**
+		 * Nome da Modalidade de Frete desejada (ex: ROD_PESADO, FRACIONADO).
+		 * Campo obrigatório para que o FreteService possa criar o frete com
+		 * flexibilidade.
+		 */
+		@NotBlank(message = "A Modalidade de Frete é obrigatória") String nomeModalidadeFrete, // <--- NOVO CAMPO
 
-) {
+		// Itens
+		@NotNull(message = "Pelo menos um item de frete é obrigatório.") @Size(min = 1, message = "A Ordem de Serviço deve ter pelo menos um item.") List<ItemFreteRequest> itensFrete) {
 }

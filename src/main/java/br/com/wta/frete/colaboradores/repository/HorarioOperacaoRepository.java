@@ -1,10 +1,12 @@
 package br.com.wta.frete.colaboradores.repository;
 
-import br.com.wta.frete.colaboradores.entity.HorarioOperacao;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import br.com.wta.frete.colaboradores.entity.HorarioOperacao;
+import br.com.wta.frete.shared.enums.DiaSemanaEnum;
 
 /**
  * Repositório JPA para a entidade HorarioOperacao.
@@ -27,9 +29,10 @@ public interface HorarioOperacaoRepository extends JpaRepository<HorarioOperacao
      * Documentação: Encontra todos os horários de operação para um determinado
      * dia da semana e Pessoa.
      * * @param pessoaId O ID da Pessoa.
+     * * @param diaSemana O dia da semana (agora ENUM).
      * 
-     * @param diaSemana O dia da semana (ex: 1 a 7).
      * @return Uma lista de HorarioOperacao.
      */
-    List<HorarioOperacao> findByPessoaIdAndDiaSemana(Long pessoaId, Short diaSemana);
+    // Assinatura do método alterada para usar DiaSemanaEnum
+    List<HorarioOperacao> findByPessoaIdAndDiaSemana(Long pessoaId, DiaSemanaEnum diaSemana);
 }

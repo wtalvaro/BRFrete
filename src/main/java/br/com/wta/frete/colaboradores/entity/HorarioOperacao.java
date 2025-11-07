@@ -1,12 +1,16 @@
 package br.com.wta.frete.colaboradores.entity;
 
 import br.com.wta.frete.core.entity.Pessoa;
+import br.com.wta.frete.shared.enums.DiaSemanaEnum;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalTime;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Entidade que mapeia a tabela 'colaboradores.horarios_operacao'.
@@ -38,12 +42,13 @@ public class HorarioOperacao {
     private Pessoa pessoa;
 
     /**
-     * Dia da semana (SMALLINT NOT NULL).
-     * Recomenda-se o uso de um ENUM ou constante na aplicação (ex: 1=Domingo,
-     * 2=Segunda).
+     * Dia da semana (ENUM NOT NULL).
+     * Mapeado como String para usar os nomes exatos do ENUM do banco de dados.
      */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM) // Mapeia o ENUM corretamente para o PostgreSQL
     @Column(name = "dia_semana", nullable = false)
-    private Short diaSemana;
+    private DiaSemanaEnum diaSemana; // Tipo alterado de Short para DiaSemanaEnum
 
     /**
      * Horário de abertura (TIME WITHOUT TIME ZONE NOT NULL).
