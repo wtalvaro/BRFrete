@@ -1,30 +1,35 @@
 package br.com.wta.frete.logistica.controller.dto;
 
-import java.time.ZonedDateTime;
-import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Size;
 
 /**
- * DTO de Requisição para criar ou atualizar uma Ordem de Serviço
+ * DTO de Requisição (Record) para criar ou atualizar uma Ordem de Serviço
  * (logistica.ordens_servico).
+ * Usa o padrão Record para imutabilidade e concisão.
  */
 public record OrdemServicoRequest(
+
 		// FK para o Cliente que está solicitando
-		@NotNull(message = "O ID do Cliente é obrigatório") Long clientePessoaId,
+		@NotNull(message = "O ID do Cliente é obrigatório") Long clienteSolicitanteId,
 
 		// FK opcional para o Transportador (se já atribuído, pode ser null)
-		Long transportadorPessoaId,
+		Long transportadorDesignadoId,
 
-		@NotBlank(message = "O local de origem é obrigatório") String localOrigem,
+		@NotNull(message = "A data prevista para coleta é obrigatória") LocalDate dataPrevistaColeta,
 
-		@NotBlank(message = "O local de destino é obrigatório") String localDestino,
+		@NotBlank(message = "O endereço de coleta é obrigatório") String enderecoColeta,
 
-		@DecimalMin(value = "0.0", message = "A distância não pode ser negativa") BigDecimal distanciaKm,
+		@NotBlank(message = "O CEP de coleta é obrigatório") @Size(min = 8, max = 8, message = "O CEP deve ter 8 dígitos") String cepColeta,
 
-		@NotNull(message = "O prazo para coleta é obrigatório") ZonedDateTime prazoColeta,
+		@NotBlank(message = "O CEP de destino é obrigatório") @Size(min = 8, max = 8, message = "O CEP deve ter 8 dígitos") String cepDestino,
 
-		// Status (pode ser usado para transições de status em uma API de UPDATE)
-		String status) {
+		// Lista de itens a serem transportados (Necessário para o FreteService)
+		@NotNull(message = "Pelo menos um item de frete é obrigatório.") @Size(min = 1, message = "A Ordem de Serviço deve ter pelo menos um item.") List<ItemFreteRequest> itensFrete
+
+) {
 }

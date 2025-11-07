@@ -19,31 +19,47 @@ import br.com.wta.frete.logistica.entity.StatusLeilao;
 public interface FreteMapper {
 
 	/**
-	 * Mapeia o DTO de Requisição para a entidade Frete. * @param request O DTO de
-	 * requisição do Frete.
+	 * Mapeia o DTO de Requisição para a entidade Frete.
+	 * * @param request O DTO de requisição do Frete.
 	 * 
 	 * @return A entidade Frete.
 	 */
 	@Mapping(target = "modalidade", ignore = true)
 	@Mapping(target = "statusLeilao", ignore = true)
 	@Mapping(target = "ordemServico", ignore = true) // A entidade OrdemServico será associada no Service
-	@Mapping(target = "valorFinalAceito", ignore = true) // CORREÇÃO: Não existe no Request, será preenchido após o
-															// leilão.
+	@Mapping(target = "valorFinalAceito", ignore = true) // Não existe no Request, será preenchido após o leilão.
+	// Ignorando novos campos, pois eles serão definidos pelo FreteService, não pelo
+	// Request
+	@Mapping(target = "distanciaKm", ignore = true)
+	@Mapping(target = "anttPisoMinimo", ignore = true)
+	@Mapping(target = "precoSugerido", ignore = true)
+	@Mapping(target = "custoBaseMercado", ignore = true)
+	@Mapping(target = "dataExpiracaoNegociacao", ignore = true)
 	Frete toEntity(FreteRequest request);
 
 	/**
-	 * Mapeia a entidade Frete para o DTO de Resposta. * @param entity A entidade
-	 * Frete.
+	 * Mapeia a entidade Frete para o DTO de Resposta.
+	 * * @param entity A entidade Frete.
 	 * 
 	 * @return O DTO de resposta do Frete.
 	 */
-	@Mappings({ @Mapping(source = "modalidade.id", target = "modalidadeId"),
-			@Mapping(source = "statusLeilao.id", target = "statusLeilaoId") })
+	@Mappings({
+			@Mapping(source = "modalidade.id", target = "modalidadeId"),
+			@Mapping(source = "statusLeilao.id", target = "statusLeilaoId"),
+
+			// CORREÇÃO: Mapeamentos adicionados para os novos campos
+			@Mapping(source = "distanciaKm", target = "distanciaKm"),
+			@Mapping(source = "anttPisoMinimo", target = "anttPisoMinimo"),
+			@Mapping(source = "precoSugerido", target = "precoSugerido"),
+			@Mapping(source = "custoBaseMercado", target = "custoBaseMercado"),
+			@Mapping(source = "dataExpiracaoNegociacao", target = "dataExpiracaoNegociacao")
+	})
 	FreteResponse toResponse(Frete entity);
 
 	/**
 	 * Atualiza uma entidade Frete existente com base nos dados do DTO de
-	 * requisição. * @param request O DTO de requisição com os dados de atualização.
+	 * requisição.
+	 * * @param request O DTO de requisição com os dados de atualização.
 	 * 
 	 * @param target A entidade Frete a ser atualizada.
 	 */
@@ -51,8 +67,15 @@ public interface FreteMapper {
 	@Mapping(target = "ordemServico", ignore = true)
 	@Mapping(target = "modalidade", ignore = true)
 	@Mapping(target = "statusLeilao", ignore = true)
-	@Mapping(target = "valorFinalAceito", ignore = true) // CORREÇÃO: Deve ser ignorado para não ser sobrescrito pelo
-															// valor default (null) do Request.
+	@Mapping(target = "valorFinalAceito", ignore = true) // Deve ser ignorado para não ser sobrescrito pelo valor
+															// default (null) do Request.
+	// Ignorando novos campos, pois eles não devem ser alterados por um Request
+	// simples de atualização
+	@Mapping(target = "distanciaKm", ignore = true)
+	@Mapping(target = "anttPisoMinimo", ignore = true)
+	@Mapping(target = "precoSugerido", ignore = true)
+	@Mapping(target = "custoBaseMercado", ignore = true)
+	@Mapping(target = "dataExpiracaoNegociacao", ignore = true)
 	void updateEntityFromRequest(FreteRequest request, @MappingTarget Frete target);
 
 	// --- Métodos Auxiliares para Relacionamentos ---

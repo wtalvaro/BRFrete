@@ -1,12 +1,21 @@
 package br.com.wta.frete.logistica.entity;
 
-import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime; // Alterado para LocalDateTime para compatibilidade com FreteService
+import java.time.ZonedDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.time.ZonedDateTime;
-import java.math.BigDecimal;
 
 /**
  * Mapeia a tabela 'logistica.fretes'. Representa o leilão ou a proposta de
@@ -80,4 +89,37 @@ public class Frete {
 	 */
 	@Column(name = "tipo_embalagem", length = 50)
 	private String tipoEmbalagem;
+
+	// --- NOVOS CAMPOS ADICIONADOS (Correção para FreteService) ---
+
+	/**
+	 * Distância rodoviária em Km (NUMERIC(8, 2)).
+	 */
+	@Column(name = "distancia_km", precision = 8, scale = 2)
+	private BigDecimal distanciaKm;
+
+	/**
+	 * Piso mínimo de frete sugerido pela ANTT (NUMERIC(10, 2)).
+	 */
+	@Column(name = "antt_piso_minimo", precision = 10, scale = 2)
+	private BigDecimal anttPisoMinimo;
+
+	/**
+	 * Preço sugerido de mercado para o frete (NUMERIC(10, 2)).
+	 */
+	@Column(name = "preco_sugerido", precision = 10, scale = 2)
+	private BigDecimal precoSugerido;
+
+	/**
+	 * Custo base de mercado calculado (NUMERIC(10, 2)).
+	 */
+	@Column(name = "custo_base_mercado", precision = 10, scale = 2)
+	private BigDecimal custoBaseMercado;
+
+	/**
+	 * Data e hora de expiração da negociação/leilão (TIMESTAMP WITH TIME ZONE).
+	 */
+	@Column(name = "data_expiracao_negociacao", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+	private LocalDateTime dataExpiracaoNegociacao; // Usando LocalDateTime para compatibilidade com o setter no
+													// FreteService
 }

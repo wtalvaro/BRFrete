@@ -1,9 +1,10 @@
 package br.com.wta.frete.logistica.controller.dto;
 
 import java.math.BigDecimal;
+
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -21,6 +22,10 @@ public record ItemFreteRequest(
 		@DecimalMin(value = "0.0", message = "O volume não pode ser negativo") BigDecimal volumeM3,
 
 		@DecimalMin(value = "0.0", message = "O valor estimado não pode ser negativo") BigDecimal valorEstimadoUnitario) {
-	// Nota: Se o ordemServicoId for injetado do path ou token, o Service deve
-	// garantir que ele seja aplicado.
+
+	// CORREÇÃO: Método adicionado para resolver o erro 'pesoEstimadoKg' no
+	// FreteService.
+	public BigDecimal pesoEstimadoKg() {
+		return quantidadePesoKg;
+	}
 }

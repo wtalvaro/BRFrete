@@ -28,6 +28,7 @@ public interface LojistaMapper {
 	 */
 	@Mapping(source = "enderecoPrincipal", target = "enderecoColeta")
 	@Mapping(target = "pessoa", ignore = true) // Será associado no Service
+	@Mapping(target = "versao", ignore = true) // <--- CORREÇÃO: Ignora o campo @Version para manter o controle de concorrência
 	Lojista toEntity(LojistaRequest dto);
 
 	/**
@@ -47,5 +48,6 @@ public interface LojistaMapper {
 	@Mapping(source = "enderecoPrincipal", target = "enderecoColeta")
 	@Mapping(target = "pessoaId", ignore = true) // PK nunca deve ser alterada
 	@Mapping(target = "pessoa", ignore = true) // Não sobrescreve o objeto Pessoa.
+	@Mapping(target = "versao", ignore = true) // <--- CORREÇÃO: Ignora o campo @Version para manter o controle de concorrência
 	void updateEntityFromRequest(LojistaRequest request, @MappingTarget Lojista target);
 }

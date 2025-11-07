@@ -1,18 +1,21 @@
 package br.com.wta.frete.logistica.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import br.com.wta.frete.logistica.entity.ModalidadeFrete;
 
 /**
- * Repositório para a entidade ModalidadeFrete (logistica.modalidades_frete).
+ * Interface Repository para a Entidade ModalidadeFrete.
  */
 @Repository
 public interface ModalidadeFreteRepository extends JpaRepository<ModalidadeFrete, Integer> {
 
 	/**
-	 * Busca uma modalidade de frete pelo seu nome.
+	 * Busca uma ModalidadeFrete pelo seu nome.
+	 * Deve retornar um Optional para usar .orElseThrow() no Service.
 	 */
-	ModalidadeFrete findByNomeModalidade(String nomeModalidade);
+	Optional<ModalidadeFrete> findByNomeModalidade(String nomeModalidade);
 }

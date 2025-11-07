@@ -1,19 +1,30 @@
 package br.com.wta.frete.logistica.entity;
 
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+
 import br.com.wta.frete.clientes.entity.DetalheCliente;
 import br.com.wta.frete.colaboradores.entity.Transportador;
 import br.com.wta.frete.core.entity.enums.StatusServico;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.time.ZonedDateTime;
-import java.math.BigDecimal;
 
 /**
  * Mapeia a tabela 'logistica.ordens_servico'. Entidade central para rastrear a
  * execução de um serviço de frete/logística.
+ * Mapeamento alinhado com o script SQL V1__Initial_Schema.sql.
  */
 @Entity
 @Table(name = "ordens_servico", schema = "logistica")
@@ -23,7 +34,7 @@ import java.math.BigDecimal;
 public class OrdemServico {
 
 	/**
-	 * Chave primária (BIGSERIAL). Mapeado para Long.
+	 * Chave primária (ordem_id BIGSERIAL).
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,61 +44,62 @@ public class OrdemServico {
 	// --- Relacionamentos (Chaves Estrangeiras) ---
 
 	/**
-	 * Cliente que solicitou a Ordem de Serviço (cliente_pessoa_id BIGINT NOT NULL).
-	 * Relacionamento Many-to-One com DetalheCliente.
+	 * Cliente que solicitou a Ordem de Serviço (cliente_solicitante_id BIGINT NOT
+	 * NULL).
+	 * CORREÇÃO: Nome da FK e do campo ajustados para o SQL.
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "cliente_pessoa_id", nullable = false)
-	private DetalheCliente cliente;
+	@JoinColumn(name = "cliente_solicitante_id", nullable = false)
+	private DetalheCliente clienteSolicitante; // Nome de campo mais claro
 
 	/**
-	 * Transportador responsável por executar o serviço (transportador_pessoa_id
-	 * BIGINT). Pode ser nulo no início (NULL). Relacionamento Many-to-One com
-	 * Transportador.
+	 * Transportador responsável por executar o serviço (transportador_designado_id
+	 * BIGINT).
+	 * CORREÇÃO: Nome da FK e do campo ajustados para o SQL.
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "transportador_pessoa_id")
-	private Transportador transportador;
+	@JoinColumn(name = "transportador_designado_id")
+	private Transportador transportadorDesignado; // Nome de campo mais claro
 
 	// --- Dados do Serviço ---
 
 	/**
-	 * Local de origem da coleta (TEXT NOT NULL).
+	 * Data e hora da criação da ordem de serviço (data_solicitacao TIMESTAMP
+	 * WITHOUT TIME ZONE).
 	 */
-	@Column(name = "local_origem", nullable = false, columnDefinition = "TEXT")
-	private String localOrigem;
+	@Column(name = "data_solicitacao", columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+	private ZonedDateTime dataSolicitacao = ZonedDateTime.now();
 
 	/**
-	 * Local de destino da entrega (TEXT NOT NULL).
+	 * Data prevista para a coleta (data_prevista_coleta DATE). Usando LocalDate
+	 * para mapear SQL DATE.
 	 */
-	@Column(name = "local_destino", nullable = false, columnDefinition = "TEXT")
-	private String localDestino;
+	@Column(name = "data_prevista_coleta")
+	private LocalDate dataPrevistaColeta;
 
 	/**
-	 * Distância calculada para o frete (NUMERIC(10, 2)).
+	 * Endereço completo de coleta (endereco_coleta TEXT NOT NULL).
 	 */
-	@Column(name = "distancia_km", precision = 10, scale = 2)
-	private BigDecimal distanciaKm;
+	@Column(name = "endereco_coleta", nullable = false, columnDefinition = "TEXT")
+	private String enderecoColeta;
 
 	/**
-	 * Data e hora limite para a coleta (TIMESTAMP WITH TIME ZONE).
+	 * CEP do local de origem da coleta (cep_coleta VARCHAR(8) NOT NULL).
+	 * CORREÇÃO: Campo adicionado.
 	 */
-	@Column(name = "prazo_coleta", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-	private ZonedDateTime prazoColeta;
+	@Column(name = "cep_coleta", nullable = false, length = 8)
+	private String cepColeta;
 
 	/**
-	 * Data e hora da criação da ordem de serviço (TIMESTAMP WITH TIME ZONE DEFAULT
-	 * CURRENT_TIMESTAMP).
+	 * CEP do local de destino da entrega (cep_destino VARCHAR(8) NOT NULL).
+	 * CORREÇÃO: Campo adicionado.
 	 */
-	@Column(name = "data_criacao", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-	private ZonedDateTime dataCriacao = ZonedDateTime.now();
+	@Column(name = "cep_destino", nullable = false, length = 8)
+	private String cepDestino;
 
 	/**
-	 * Status da Ordem de Serviço (logistica.status_servico ENUM NOT NULL DEFAULT
-	 * 'PENDENTE'). Mapeado para o Enum Java.
-	 * 
-	 * @Enumerated(EnumType.STRING) garante que o valor seja armazenado como string
-	 *                              no DB.
+	 * Status da Ordem de Serviço (status logistica.status_servico ENUM NOT NULL
+	 * DEFAULT 'PENDENTE').
 	 */
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20)

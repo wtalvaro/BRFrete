@@ -1,7 +1,8 @@
 package br.com.wta.frete.logistica.controller.dto;
 
-import java.time.ZonedDateTime;
 import java.math.BigDecimal;
+import java.time.LocalDateTime; // Importado para compatibilidade com a Entidade Frete
+import java.time.ZonedDateTime;
 
 /**
  * DTO de Resposta para a entidade Frete (logistica.fretes). Retorna os detalhes
@@ -27,5 +28,22 @@ public record FreteResponse(
 		BigDecimal valorFinalAceito,
 
 		// Tipo de embalagem requerida/utilizada
-		String tipoEmbalagem) {
+		String tipoEmbalagem,
+
+		// --- NOVOS CAMPOS ADICIONADOS (Para resolver os Warnings) ---
+
+		// Distância rodoviária em Km (NUMERIC)
+		BigDecimal distanciaKm,
+
+		// Piso mínimo de frete sugerido pela ANTT (NUMERIC)
+		BigDecimal anttPisoMinimo,
+
+		// Preço sugerido de mercado para o frete (NUMERIC)
+		BigDecimal precoSugerido,
+
+		// Custo base de mercado calculado (NUMERIC)
+		BigDecimal custoBaseMercado,
+
+		// Data e hora de expiração da negociação
+		LocalDateTime dataExpiracaoNegociacao) { // Usando LocalDateTime conforme a Entidade
 }

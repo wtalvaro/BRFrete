@@ -1,6 +1,7 @@
 -- ######################################################################
 -- SCRIPT COMPLETO PARA CRIAÇÃO DE ESQUEMA DE BASE DE DADOS (POSTGRESQL)
--- Versão Final com Funcionalidades de CHAT e Q&A (Perguntas/Respostas)
+-- Versão Final com Funcionalidades de CHAT, Q&A e PREÇOS CUSTOMIZADOS POR VEÍCULO
+-- CORRIGIDO: Problemas de dependência de Foreign Key no Flyway.
 -- ######################################################################
 
 
@@ -38,6 +39,7 @@ DROP TABLE IF EXISTS clientes.pedidos_coleta CASCADE;
 DROP TABLE IF EXISTS clientes.detalhes CASCADE;
 
 -- SCHEMA COLABORADORES
+DROP TABLE IF EXISTS colaboradores.metricas_transportador CASCADE;
 DROP TABLE IF EXISTS colaboradores.veiculos CASCADE;
 DROP TABLE IF EXISTS colaboradores.transportadores CASCADE;
 DROP TABLE IF EXISTS colaboradores.sucateiros CASCADE;
@@ -308,6 +310,48 @@ CREATE TABLE colaboradores.veiculos (
     -- agora usa o ENUM nativo do PostgreSQL.
 );
 
+-- ======================================================================
+-- Módulo: COLABORADORES
+-- 1. CRIAÇÃO DA TABELA: metricas_transportador
+-- Catálogo de Métricas de Preços para os veículos de um Transportador.
+-- ======================================================================
+
+CREATE TABLE colaboradores.metricas_transportador (
+    -- Chave Primária para a Métrica
+    metrica_id BIGSERIAL PRIMARY KEY,
+
+    -- FK para o Transportador: Um Transportador é dono de um conjunto de Métricas
+    transportador_pessoa_id BIGINT NOT NULL,
+
+    -- Nome Descritivo da Métrica (Ex: "Caminhão Toco - Custo Padrão Sucata Leve")
+    nome_metrica VARCHAR(100) NOT NULL,
+
+    -- CAMPOS DE FILTRO PARA PRECIFICAÇÃO DINÂMICA
+    tipo_carga_material VARCHAR(100),
+    tipo_veiculo colaboradores.tipo_veiculo_enum,
+    modalidade_frete_id INTEGER,
+
+    -- Parâmetros de Custo Personalizados:
+    custo_fixo_viagem NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    custo_por_km NUMERIC(10, 4) NOT NULL DEFAULT 0.0000,
+    margem_lucro NUMERIC(5, 4) DEFAULT 0.1000,
+    custo_hora_espera NUMERIC(10, 2) DEFAULT 0.00,
+
+    -- Bloqueio Otimista
+    versao INTEGER NOT NULL DEFAULT 0,
+
+    -- Restrições de Chaves (A FK da Modalidade será adicionada no bloco ALTER TABLE)
+    FOREIGN KEY (transportador_pessoa_id)
+        REFERENCES colaboradores.transportadores(pessoa_id)
+        ON DELETE CASCADE,
+
+    -- Um transportador não pode ter duas métricas com o mesmo nome
+    UNIQUE (transportador_pessoa_id, nome_metrica)
+);
+
+-- Adiciona um comentário para documentação
+COMMENT ON TABLE colaboradores.metricas_transportador IS 
+    'Catálogo de conjuntos de parâmetros de precificação customizados, definidos por transportadores e associados a tipos de veículo/carga.';
 
 -- ======================================================================
 -- 5. SCHEMA CLIENTES
@@ -331,6 +375,7 @@ CREATE TABLE clientes.pedidos_coleta (
 
 -- ======================================================================
 -- 6. SCHEMA LOGISTICA
+-- PARTE 1: CRIAÇÃO DE TODAS AS TABELAS (SEM FKs para dependências circulares/posteriores)
 -- ======================================================================
 
 CREATE TABLE logistica.modalidades_frete (
@@ -351,6 +396,7 @@ CREATE TABLE logistica.antt_parametros (
     data_vigencia DATE DEFAULT now()
 );
 
+-- Tabela de Ordens de Serviço (FKs movidas para ALTER TABLE)
 CREATE TABLE logistica.ordens_servico (
     ordem_id BIGSERIAL PRIMARY KEY,
     cliente_solicitante_id BIGINT NOT NULL,
@@ -360,11 +406,11 @@ CREATE TABLE logistica.ordens_servico (
     endereco_coleta TEXT NOT NULL,
     cep_coleta VARCHAR(8) NOT NULL,
     cep_destino VARCHAR(8) NOT NULL,
-    status logistica.status_servico NOT NULL DEFAULT 'PENDENTE'::logistica.status_servico,
-    FOREIGN KEY (cliente_solicitante_id) REFERENCES clientes.detalhes(pessoa_id) ON DELETE RESTRICT,
-    FOREIGN KEY (transportador_designado_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE SET NULL
+    status logistica.status_servico NOT NULL DEFAULT 'PENDENTE'::logistica.status_servico
+    -- FKs para clientes.detalhes e colaboradores.transportadores removidas
 );
 
+-- Tabela de Fretes (FKs movidas para ALTER TABLE)
 CREATE TABLE logistica.fretes (
     frete_id SERIAL PRIMARY KEY,
     ordem_servico_id BIGINT NOT NULL,
@@ -375,23 +421,22 @@ CREATE TABLE logistica.fretes (
     antt_piso_minimo NUMERIC(10, 2),
     custo_base_mercado NUMERIC(10, 2),
     distancia_km NUMERIC(10, 2),
-    transportador_selecionado_id BIGINT,
-    FOREIGN KEY (ordem_servico_id) REFERENCES logistica.ordens_servico(ordem_id) ON DELETE CASCADE,
-    FOREIGN KEY (modalidade_id) REFERENCES logistica.modalidades_frete(modalidade_id) ON DELETE RESTRICT,
-    FOREIGN KEY (status_leilao_id) REFERENCES logistica.status_leilao(status_id) ON DELETE RESTRICT,
-    FOREIGN KEY (transportador_selecionado_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE SET NULL
+    transportador_selecionado_id BIGINT
+    -- Todas as FKs removidas
 );
 
+-- Tabela de Itens de Frete (FKs movidas para ALTER TABLE)
 CREATE TABLE logistica.itens_frete (
     item_frete_id SERIAL PRIMARY KEY,
     frete_id INTEGER NOT NULL,
     descricao TEXT NOT NULL,
     tipo_material VARCHAR(100),
     peso_estimado_kg NUMERIC(10, 2) NOT NULL,
-    volume_estimado_m3 NUMERIC(10, 2),
-    FOREIGN KEY (frete_id) REFERENCES logistica.fretes(frete_id) ON DELETE CASCADE
+    volume_estimado_m3 NUMERIC(10, 2)
+    -- FK para logistica.fretes removida
 );
 
+-- Tabela de Lances (FKs movidas para ALTER TABLE)
 CREATE TABLE logistica.lances (
     lance_id SERIAL PRIMARY KEY,
     frete_id INTEGER NOT NULL,
@@ -399,9 +444,8 @@ CREATE TABLE logistica.lances (
     valor_lance NUMERIC(10, 2) NOT NULL,
     data_lance TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_vencedor BOOLEAN DEFAULT false,
-    motivo_cancelamento TEXT,
-    FOREIGN KEY (frete_id) REFERENCES logistica.fretes(frete_id) ON DELETE CASCADE,
-    FOREIGN KEY (transportador_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE RESTRICT
+    motivo_cancelamento TEXT
+    -- FKs para logistica.fretes e colaboradores.transportadores removidas
 );
 
 CREATE TABLE logistica.cotacoes_materiais (
@@ -412,6 +456,48 @@ CREATE TABLE logistica.cotacoes_materiais (
     data_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+
+-- ======================================================================
+-- 6. SCHEMA LOGISTICA
+-- PARTE 2: ADIÇÃO DAS FOREIGN KEYS (APÓS TODAS AS TABELAS EXISTIREM)
+-- ======================================================================
+
+-- Adiciona FKs em logistica.ordens_servico
+ALTER TABLE logistica.ordens_servico
+    ADD CONSTRAINT fk_os_cliente
+        FOREIGN KEY (cliente_solicitante_id) REFERENCES clientes.detalhes(pessoa_id) ON DELETE RESTRICT,
+    ADD CONSTRAINT fk_os_transportador_designado
+        FOREIGN KEY (transportador_designado_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE SET NULL;
+
+-- Adiciona FKs em logistica.fretes
+ALTER TABLE logistica.fretes
+    ADD CONSTRAINT fk_frete_ordem_servico
+        FOREIGN KEY (ordem_servico_id) REFERENCES logistica.ordens_servico(ordem_id) ON DELETE CASCADE,
+    ADD CONSTRAINT fk_frete_modalidade
+        FOREIGN KEY (modalidade_id) REFERENCES logistica.modalidades_frete(modalidade_id) ON DELETE RESTRICT,
+    ADD CONSTRAINT fk_frete_status_leilao
+        FOREIGN KEY (status_leilao_id) REFERENCES logistica.status_leilao(status_id) ON DELETE RESTRICT,
+    ADD CONSTRAINT fk_frete_transportador_selecionado
+        FOREIGN KEY (transportador_selecionado_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE SET NULL;
+
+-- Adiciona FKs em logistica.itens_frete
+ALTER TABLE logistica.itens_frete
+    ADD CONSTRAINT fk_item_frete
+        FOREIGN KEY (frete_id) REFERENCES logistica.fretes(frete_id) ON DELETE CASCADE;
+
+-- Adiciona FKs em logistica.lances
+ALTER TABLE logistica.lances
+    ADD CONSTRAINT fk_lance_frete
+        FOREIGN KEY (frete_id) REFERENCES logistica.fretes(frete_id) ON DELETE CASCADE,
+    ADD CONSTRAINT fk_lance_transportador
+        FOREIGN KEY (transportador_id) REFERENCES colaboradores.transportadores(pessoa_id) ON DELETE RESTRICT;
+
+-- Adiciona FKs no catálogo de métricas (colaboradores.metricas_transportador)
+ALTER TABLE colaboradores.metricas_transportador
+    ADD CONSTRAINT fk_metrica_modalidade
+        FOREIGN KEY (modalidade_frete_id)
+        REFERENCES logistica.modalidades_frete(modalidade_id)
+        ON DELETE SET NULL;
 
 -- ======================================================================
 -- 7. SCHEMA MARKETPLACE
