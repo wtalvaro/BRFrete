@@ -1,70 +1,79 @@
+// Caminho: src/main/java/br/com/wta/frete/logistica/entity/Lance.java
 package br.com.wta.frete.logistica.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 import br.com.wta.frete.colaboradores.entity.Transportador;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * Mapeia a tabela 'logistica.lances'. Registra as propostas de preço feitas
- * pelos Transportadores para um Frete.
+ * Mapeia a tabela 'logistica.lances'. Registra a proposta de preço
+ * de um Transportador para um Frete (Leilão Reverso).
  */
 @Entity
 @Table(name = "lances", schema = "logistica")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Lance {
 
-	/**
-	 * Chave primária (BIGSERIAL). Mapeado para Long.
-	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "lance_id")
 	private Long id;
 
-	// --- Relacionamentos (Chaves Estrangeiras) ---
-
 	/**
-	 * Frete ao qual este lance se refere (ordem_servico_id BIGINT NOT NULL).
-	 * Relacionamento Many-to-One com Frete.
+	 * Referência ao Frete que está sendo leiloado.
+	 * CORREÇÃO: Coluna ajustada para 'frete_id'.
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "ordem_servico_id", nullable = false)
+	@JoinColumn(name = "frete_id", nullable = false)
 	private Frete frete;
 
 	/**
-	 * Transportador que fez o lance (transportador_pessoa_id BIGINT NOT NULL).
-	 * Relacionamento Many-to-One com Transportador.
+	 * Referência ao Transportador que submeteu o lance.
+	 * CORREÇÃO: Coluna ajustada para 'transportador_id'.
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "transportador_pessoa_id", nullable = false)
+	@JoinColumn(name = "transportador_id", nullable = false)
 	private Transportador transportador;
 
-	// --- Detalhes do Lance ---
+	/**
+	 * Valor monetário proposto pelo transportador (NUMERIC(10, 2)).
+	 * CORREÇÃO: Campo e coluna ajustados para 'valor_lance'.
+	 */
+	@Column(name = "valor_lance", precision = 10, scale = 2, nullable = false)
+	private BigDecimal valorLance;
 
 	/**
-	 * Valor proposto pelo Transportador (NUMERIC(10, 2) NOT NULL).
+	 * Data e hora da submissão/atualização do lance.
 	 */
-	@Column(name = "valor_proposto", nullable = false, precision = 10, scale = 2)
-	private BigDecimal valorProposto;
+	@Column(name = "data_lance")
+	private LocalDateTime dataLance;
 
 	/**
-	 * Data e hora em que o lance foi registrado (TIMESTAMP WITH TIME ZONE DEFAULT
-	 * CURRENT_TIMESTAMP).
+	 * Indica se este lance foi o vencedor do leilão (is_vencedor BOOLEAN).
 	 */
-	@Column(name = "data_lance", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-	private ZonedDateTime dataLance = ZonedDateTime.now();
+	@Column(name = "is_vencedor")
+	private boolean vencedor;
 
 	/**
-	 * Indica se o lance foi o lance vencedor (BOOLEAN NOT NULL DEFAULT false).
+	 * Motivo do cancelamento (TEXT). NOVO CAMPO
 	 */
-	@Column(name = "vencedor", nullable = false)
-	private Boolean vencedor = false;
+	@Column(name = "motivo_cancelamento", columnDefinition = "TEXT")
+	private String motivoCancelamento;
 }

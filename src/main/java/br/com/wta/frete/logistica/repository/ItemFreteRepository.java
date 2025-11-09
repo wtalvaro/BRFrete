@@ -1,6 +1,8 @@
+// Caminho: src/main/java/br/com/wta/frete/logistica/repository/ItemFreteRepository.java
 package br.com.wta.frete.logistica.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query; // NOVO IMPORT
 import org.springframework.stereotype.Repository;
 
 import br.com.wta.frete.logistica.entity.ItemFrete;
@@ -14,7 +16,10 @@ import java.util.List;
 public interface ItemFreteRepository extends JpaRepository<ItemFrete, Long> {
 
 	/**
-	 * Busca todos os itens de um Frete específico (usando a ordem_servico_id).
+	 * Busca todos os itens de um Frete específico, filtrando pelo ID da Ordem de
+	 * Serviço.
+	 * CORREÇÃO: Usando @Query para navegação explícita i.frete.ordemServico.id.
 	 */
-	List<ItemFrete> findByFreteOrdemServicoId(Long ordemServicoId);
+	@Query("SELECT i FROM ItemFrete i WHERE i.frete.ordemServico.id = :ordemServicoId")
+	List<ItemFrete> findByFreteOrdemServico_Id(Long ordemServicoId);
 }

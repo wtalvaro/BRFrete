@@ -2,63 +2,47 @@ package br.com.wta.frete.logistica.service.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
-import org.mapstruct.factory.Mappers;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
 
 import br.com.wta.frete.logistica.controller.dto.ItemFreteRequest;
 import br.com.wta.frete.logistica.controller.dto.ItemFreteResponse;
-import br.com.wta.frete.logistica.entity.Frete;
 import br.com.wta.frete.logistica.entity.ItemFrete;
 
 /**
- * Mapper para a entidade ItemFrete, responsável por converter entre
- * ItemFreteRequest/Response e ItemFrete (Entidade).
+ * Mapeador MapStruct para conversão entre DTOs e a entidade ItemFrete.
+ *
+ * CORREÇÃO: Alinhamento da Foreign Key (FK) para frete.freteId.
  */
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring")
 public interface ItemFreteMapper {
 
-	ItemFreteMapper INSTANCE = Mappers.getMapper(ItemFreteMapper.class);
-
 	/**
-	 * Converte um ItemFreteRequest para a entidade ItemFrete. Mapeia
-	 * 'ordemServicoId' do Request para a entidade 'frete' em ItemFrete.
-	 * 
-	 * @param request DTO de requisição (entrada de dados).
-	 * @return A entidade ItemFrete.
+	 * Converte um DTO de requisição para a entidade ItemFrete.
 	 */
-	@Mapping(target = "id", ignore = true)
-	@Mapping(target = "frete", source = "ordemServicoId")
+	@Mappings({
+			@Mapping(target = "id", ignore = true),
+			@Mapping(target = "frete", ignore = true)
+	})
 	ItemFrete toEntity(ItemFreteRequest request);
 
 	/**
-	 * Converte a entidade ItemFrete para o DTO de Resposta ItemFreteResponse.
-	 * Mapeia 'frete.ordemServicoId' (PK do Frete) para 'ordemServicoId' do
-	 * Response.
-	 * 
-	 * @param entity Entidade ItemFrete.
-	 * @return O DTO de resposta.
+	 * Converte a entidade ItemFrete para o DTO de resposta.
+	 * O campo freteId é mapeado usando a PK real da entidade Frete.
 	 */
-	@Mapping(target = "itemFreteId", source = "id")
-	@Mapping(target = "ordemServicoId", source = "frete.ordemServicoId") // Corrigido para frete.ordemServicoId
+	@Mappings({
+			@Mapping(source = "id", target = "itemFreteId"), // Mapeia a PK da entidade ItemFrete
+			// CORREÇÃO FINAL: Usando frete.freteId, conforme a entidade Frete.java
+			@Mapping(source = "frete.freteId", target = "freteId")
+	})
 	ItemFreteResponse toResponse(ItemFrete entity);
 
 	/**
-	 * Método auxiliar para o MapStruct criar a entidade Frete a partir do ID. Agora
-	 * usa o setter correto: setOrdemServicoId().
-	 * 
-	 * @param ordemServicoId O ID da Ordem de Serviço (Frete).
-	 * @return Uma nova entidade Frete com apenas o ID preenchido.
+	 * Atualiza uma entidade ItemFrete existente com base nos dados do DTO.
 	 */
-	default Frete toFrete(Long ordemServicoId) {
-		if (ordemServicoId == null) {
-			return null;
-		}
-
-		// CORREÇÃO: Usando o setter correto gerado pelo Lombok para a PK da Entidade
-		// Frete.
-		Frete frete = new Frete();
-		frete.setOrdemServicoId(ordemServicoId);
-
-		return frete;
-	}
+	@Mappings({
+			@Mapping(target = "id", ignore = true),
+			@Mapping(target = "frete", ignore = true)
+	})
+	void updateEntity(ItemFreteRequest request, @MappingTarget ItemFrete entity);
 }

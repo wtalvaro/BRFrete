@@ -430,12 +430,16 @@ CREATE TABLE logistica.fretes (
     ordem_servico_id BIGINT NOT NULL,
     modalidade_id INTEGER NOT NULL,
     status_leilao_id INTEGER NOT NULL,
+    transportador_selecionado_id BIGINT,
     data_expiracao_negociacao TIMESTAMP WITH TIME ZONE,
-    preco_sugerido NUMERIC(10, 2),
-    antt_piso_minimo NUMERIC(10, 2),
-    custo_base_mercado NUMERIC(10, 2),
     distancia_km NUMERIC(10, 2),
-    transportador_selecionado_id BIGINT
+    antt_piso_minimo NUMERIC(10, 2),
+    preco_sugerido NUMERIC(10, 2),
+    custo_base_mercado NUMERIC(10, 2),
+    peso_total_kg NUMERIC(19, 2),
+    valor_inicial_proposto NUMERIC(10, 2),
+    valor_final_aceito NUMERIC(10, 2),
+    tipo_embalagem VARCHAR(50)
     -- Todas as FKs removidas
 );
 

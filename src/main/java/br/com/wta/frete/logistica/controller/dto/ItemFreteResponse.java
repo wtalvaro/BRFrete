@@ -1,27 +1,31 @@
+// Caminho: src/main/java/br/com/wta/frete/logistica/controller/dto/ItemFreteResponse.java
 package br.com.wta.frete.logistica.controller.dto;
 
 import java.math.BigDecimal;
 
 /**
- * DTO de Resposta para a entidade ItemFrete (logistica.itens_frete). Retorna os
- * detalhes de um item específico que faz parte de uma Ordem de Serviço.
+ * DTO de Resposta para a entidade ItemFrete.
+ * * CORREÇÕES: Alinhamento de nomes de campos com a Entidade.
  */
 public record ItemFreteResponse(
-		// Chave primária do item de frete (renomeado de 'id' para clareza)
+		// ID do item (chave primária de ItemFrete)
 		Long itemFreteId,
 
-		// FK para a Ordem de Serviço a que este item pertence
-		Long ordemServicoId,
+		// Chave Externa para o Frete
+		Long freteId,
 
-		// Descrição do material ou produto
-		String descricaoItem,
+		// NOME CORRIGIDO: 'nomeItem' para 'descricao'
+		String descricao,
 
-		// Quantidade em peso (KG) do item
-		BigDecimal quantidadePesoKg,
+		// NOVO CAMPO: 'tipoMaterial'
+		String tipoMaterial,
 
-		// Volume em metros cúbicos (M3) do item
-		BigDecimal volumeM3,
+		// Peso Estimado
+		BigDecimal pesoEstimadoKg) {
 
-		// Valor unitário estimado do item
-		BigDecimal valorEstimadoUnitario) {
+	/**
+	 * CAMPO REMOVIDO: 'observacao' não existia no SQL nem na Entidade.
+	 * O volume ('volumeEstimadoM3') também não foi incluído aqui para manter o DTO
+	 * de resposta mais limpo, focando nos campos essenciais.
+	 */
 }

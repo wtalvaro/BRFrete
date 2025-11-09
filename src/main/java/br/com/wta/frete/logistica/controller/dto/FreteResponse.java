@@ -1,49 +1,41 @@
 package br.com.wta.frete.logistica.controller.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime; // Importado para compatibilidade com a Entidade Frete
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 /**
- * DTO de Resposta para a entidade Frete (logistica.fretes). Retorna os detalhes
- * do processo de leilão/proposta de um frete.
+ * DTO de Resposta para a entidade Frete.
  */
 public record FreteResponse(
-		// FK para a Ordem de Serviço (Chave Primária e Estrangeira)
+		// [NOVO] ID Próprio do Frete
+		Long freteId,
+
+		// Campos herdados da OrdemServico (para referência)
 		Long ordemServicoId,
 
-		// FK para a Modalidade de Frete (Lookup)
+		// Campos de Relacionamento
 		Integer modalidadeId,
-
-		// FK para o Status do Leilão (Lookup)
+		String nomeModalidade,
 		Integer statusLeilaoId,
+		String nomeStatusLeilao,
 
-		// Data e hora limite para receber propostas (TIMESTAMP WITH TIME ZONE)
-		ZonedDateTime prazoEncerramento,
+		// [NOVO] Transportador Selecionado (Pode ser null)
+		Long transportadorSelecionadoId,
 
-		// Valor base sugerido para o frete (NUMERIC)
-		BigDecimal valorInicialProposto,
-
-		// Valor final aceito, se o leilão foi fechado (NUMERIC)
+		// Campos de Negociação
+		LocalDateTime dataExpiracaoNegociacao,
+		BigDecimal precoSugerido,
+		BigDecimal anttPisoMinimo,
+		BigDecimal custoBaseMercado,
+		BigDecimal distanciaKm,
 		BigDecimal valorFinalAceito,
 
-		// Tipo de embalagem requerida/utilizada
-		String tipoEmbalagem,
+		// Campos de Logística Adicionais
+		BigDecimal pesoTotalKg,
+		BigDecimal valorInicialProposto,
+		String tipoEmbalagem
 
-		// --- NOVOS CAMPOS ADICIONADOS (Para resolver os Warnings) ---
-
-		// Distância rodoviária em Km (NUMERIC)
-		BigDecimal distanciaKm,
-
-		// Piso mínimo de frete sugerido pela ANTT (NUMERIC)
-		BigDecimal anttPisoMinimo,
-
-		// Preço sugerido de mercado para o frete (NUMERIC)
-		BigDecimal precoSugerido,
-
-		// Custo base de mercado calculado (NUMERIC)
-		BigDecimal custoBaseMercado,
-
-		// Data e hora de expiração da negociação
-		LocalDateTime dataExpiracaoNegociacao) { // Usando LocalDateTime conforme a Entidade
+// O campo 'prazoEncerramento' deve ser removido do DTO se existia antes,
+// sendo substituído por 'dataExpiracaoNegociacao'
+) {
 }

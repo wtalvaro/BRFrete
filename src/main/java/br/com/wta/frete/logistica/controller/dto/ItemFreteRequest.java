@@ -9,23 +9,28 @@ import jakarta.validation.constraints.Size;
 
 /**
  * DTO de Requisição para receber dados de um ItemFrete (logistica.itens_frete).
+ * * CORREÇÕES: Nomes dos campos alinhados ao novo padrão.
  */
 public record ItemFreteRequest(
-		// FK para a OrdemServico. Marcado como NOT NULL, pois é essencial para a
-		// persistência.
-		@NotNull(message = "O ID da Ordem de Serviço (Frete) é obrigatório") Long ordemServicoId,
+		// FK para o Frete. Renomeado para 'freteId'
+		@NotNull(message = "O ID do Frete é obrigatório") Long freteId,
 
-		@NotBlank(message = "A descrição do item é obrigatória") @Size(max = 255) String descricaoItem,
+		// NOME CORRIGIDO: 'descricaoItem' para 'descricao'
+		// Removemos @Size pois o tipo SQL é TEXT.
+		@NotBlank(message = "A descrição do item é obrigatória") String descricao,
 
-		@NotNull(message = "O peso é obrigatório") @DecimalMin(value = "0.01", message = "O peso deve ser positivo") BigDecimal quantidadePesoKg,
+		// NOVO CAMPO: Adicionamos o 'tipoMaterial'
+		@Size(max = 100) String tipoMaterial,
 
-		@DecimalMin(value = "0.0", message = "O volume não pode ser negativo") BigDecimal volumeM3,
+		// NOME CORRIGIDO: 'quantidadePesoKg' para 'pesoEstimadoKg'
+		@NotNull(message = "O peso é obrigatório") @DecimalMin(value = "0.01", message = "O peso deve ser positivo") BigDecimal pesoEstimadoKg,
 
-		@DecimalMin(value = "0.0", message = "O valor estimado não pode ser negativo") BigDecimal valorEstimadoUnitario) {
+		// NOME CORRIGIDO: 'volumeM3' para 'volumeEstimadoM3'
+		@DecimalMin(value = "0.0", message = "O volume não pode ser negativo") BigDecimal volumeEstimadoM3) {
 
-	// CORREÇÃO: Método adicionado para resolver o erro 'pesoEstimadoKg' no
-	// FreteService.
-	public BigDecimal pesoEstimadoKg() {
-		return quantidadePesoKg;
-	}
+	/**
+	 * MÉTODO REMOVIDO: O método 'pesoEstimadoKg()' que estava aqui foi removido,
+	 * pois agora o nome do campo já é 'pesoEstimadoKg', eliminando a necessidade
+	 * de getters customizados.
+	 */
 }

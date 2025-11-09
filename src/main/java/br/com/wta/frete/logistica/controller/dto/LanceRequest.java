@@ -1,21 +1,17 @@
 package br.com.wta.frete.logistica.controller.dto;
 
 import java.math.BigDecimal;
-import jakarta.validation.constraints.NotNull;
+
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 
 /**
- * DTO de Requisição para registrar uma proposta de Lance de frete
- * (logistica.lances).
+ * DTO de requisição para submeter um novo lance ou atualizar um lance
+ * existente.
+ * CORREÇÃO: 'valorProposto' renomeado para 'valorLance'.
  */
 public record LanceRequest(
-		// ID do Frete (ID da Ordem de Serviço)
-		@NotNull(message = "O ID da Ordem de Serviço (Frete) é obrigatório") Long ordemServicoId,
+		@NotNull(message = "O ID do Transportador é obrigatório.") Long transportadorId,
 
-		// ID do Transportador que está fazendo o lance
-		@NotNull(message = "O ID do Transportador é obrigatório") Long transportadorPessoaId,
-
-		@NotNull(message = "O valor proposto é obrigatório")
-		// O valor deve ser maior que zero (inclusive = false)
-		@DecimalMin(value = "0.0", inclusive = false, message = "O valor deve ser positivo") BigDecimal valorProposto) {
+		@NotNull(message = "O valor do lance é obrigatório.") @DecimalMin(value = "0.01", message = "O valor deve ser positivo.") BigDecimal valorLance) {
 }
