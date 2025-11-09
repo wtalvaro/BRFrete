@@ -1,3 +1,4 @@
+// Caminho: src/main/java/br/com/wta/frete/logistica/service/mapper/OrdemServicoMapper.java
 package br.com.wta.frete.logistica.service.mapper;
 
 import org.mapstruct.Mapper;
@@ -38,22 +39,19 @@ public interface OrdemServicoMapper {
 	@Mapping(target = "clienteSolicitante", ignore = true)
 	@Mapping(target = "transportadorDesignado", ignore = true)
 	@Mapping(target = "dataSolicitacao", ignore = true)
-	// CORREÇÃO: Removida a linha de ignorar "distanciaKm" pois o campo não existe
-	// na Entidade.
 	@Mapping(target = "status", ignore = true) // Status inicial é PENDENTE
 	OrdemServico toEntity(OrdemServicoRequest request);
 
 	/**
 	 * Atualiza uma Entidade OrdemServico existente com os dados de um Request.
+	 * Renomeado para 'updateEntity' para consistência.
 	 */
 	@Mapping(target = "clienteSolicitante", ignore = true)
 	@Mapping(target = "transportadorDesignado", ignore = true)
 	@Mapping(target = "id", ignore = true)
 	@Mapping(target = "dataSolicitacao", ignore = true)
-	// CORREÇÃO: Removida a linha de ignorar "distanciaKm" pois o campo não existe
-	// na Entidade.
 	@Mapping(target = "status", ignore = true)
-	void updateEntityFromRequest(OrdemServicoRequest request, @MappingTarget OrdemServico target);
+	void updateEntity(OrdemServicoRequest request, @MappingTarget OrdemServico target); // <--- CORREÇÃO APLICADA AQUI
 
 	// --- Métodos de Conversão Customizados (para mapeamento de Enum <-> String)
 	// ---

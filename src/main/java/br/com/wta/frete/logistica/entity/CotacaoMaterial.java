@@ -6,7 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime; // Alterado de ZonedDateTime
 
 /**
  * Mapeia a tabela 'logistica.cotacoes_materiais'. Armazena as cotações de preço
@@ -47,9 +48,17 @@ public class CotacaoMaterial {
 	private String unidadeMedida = "KG";
 
 	/**
-	 * Data e hora da última atualização do preço (TIMESTAMP WITH TIME ZONE DEFAULT
-	 * CURRENT_TIMESTAMP).
+	 * Data e hora da última atualização (data_atualizacao TIMESTAMP WITHOUT TIME
+	 * ZONE).
+	 * CORREÇÃO: Tipo ajustado para LocalDateTime.
 	 */
-	@Column(name = "data_atualizacao", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-	private ZonedDateTime dataAtualizacao = ZonedDateTime.now();
+	@Column(name = "data_atualizacao", nullable = false, columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+	private LocalDateTime dataAtualizacao = LocalDateTime.now();
+
+	/**
+	 * Data de vigência do preço (data_vigencia DATE).
+	 * CORREÇÃO: Campo adicionado/alinhado com o Schema SQL.
+	 */
+	@Column(name = "data_vigencia")
+	private LocalDate dataVigencia;
 }

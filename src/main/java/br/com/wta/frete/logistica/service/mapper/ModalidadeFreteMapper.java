@@ -1,14 +1,13 @@
 package br.com.wta.frete.logistica.service.mapper;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
-import org.mapstruct.factory.Mappers;
 
 import br.com.wta.frete.logistica.controller.dto.ModalidadeFreteResponse;
 import br.com.wta.frete.logistica.entity.ModalidadeFrete;
-
-import java.util.List;
 
 /**
  * Mapper para a entidade ModalidadeFrete, responsável por converter entre
@@ -18,9 +17,8 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ModalidadeFreteMapper {
 
-	// Opcional: Para uso fora do contexto Spring (embora componentModel="spring"
-	// seja recomendado)
-	ModalidadeFreteMapper INSTANCE = Mappers.getMapper(ModalidadeFreteMapper.class);
+	// Linha removida: ModalidadeFreteMapper INSTANCE =
+	// Mappers.getMapper(ModalidadeFreteMapper.class);
 
 	// --- Mapeamento de Entidade para Response ---
 
@@ -28,9 +26,9 @@ public interface ModalidadeFreteMapper {
 	 * Converte a entidade ModalidadeFrete para o DTO de Resposta
 	 * ModalidadeFreteResponse. Realiza o mapeamento de: - id (ModalidadeFrete) para
 	 * modalidadeFreteId (ModalidadeFreteResponse). - nomeModalidade
-	 * (ModalidadeFrete) para nomeModalidade (ModalidadeFreteResponse). * @param
-	 * entity A entidade ModalidadeFrete.
-	 * 
+	 * (ModalidadeFrete) para nomeModalidade (ModalidadeFreteResponse).
+	 *
+	 * @param entity A entidade ModalidadeFrete.
 	 * @return O DTO de resposta ModalidadeFreteResponse.
 	 */
 	@Mapping(target = "modalidadeFreteId", source = "id")
@@ -38,10 +36,10 @@ public interface ModalidadeFreteMapper {
 
 	/**
 	 * Converte uma lista de entidades ModalidadeFrete para uma lista de DTOs
-	 * ModalidadeFreteResponse. * @param entities A lista de entidades
-	 * ModalidadeFrete.
-	 * 
-	 * @return A lista de DTOs ModalidadeFreteResponse.
+	 * ModalidadeFreteResponse.
+	 *
+	 * @param entities A lista de entidades.
+	 * @return A lista de DTOs de resposta.
 	 */
-	List<ModalidadeFreteResponse> toResponseList(List<ModalidadeFrete> entities);
+	List<ModalidadeFreteResponse> toResponse(List<ModalidadeFrete> entities);
 }

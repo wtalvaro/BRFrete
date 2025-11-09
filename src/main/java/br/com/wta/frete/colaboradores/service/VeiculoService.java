@@ -1,5 +1,8 @@
 package br.com.wta.frete.colaboradores.service;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import br.com.wta.frete.colaboradores.controller.dto.VeiculoRequest;
 import br.com.wta.frete.colaboradores.controller.dto.VeiculoResponse;
 import br.com.wta.frete.colaboradores.entity.Transportador;
@@ -10,8 +13,6 @@ import br.com.wta.frete.colaboradores.service.mapper.VeiculoMapper;
 import br.com.wta.frete.shared.exception.InvalidDataException;
 import br.com.wta.frete.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Serviço responsável pela lógica de negócio da entidade Veiculo.

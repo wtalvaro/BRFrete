@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import br.com.wta.frete.core.entity.enums.TipoConversa;
 
 @Entity
@@ -22,6 +25,7 @@ public class Conversa {
 	 * @Enumerated(EnumType.STRING) garante que o Enum seja persistido como VARCHAR.
 	 */
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM) // Mapeia o ENUM corretamente para o PostgreSQL
 	@Column(name = "tipo_conversa", length = 20, nullable = false)
 	private TipoConversa tipoConversa;
 
