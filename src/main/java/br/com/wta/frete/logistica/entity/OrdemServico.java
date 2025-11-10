@@ -3,6 +3,9 @@ package br.com.wta.frete.logistica.entity;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import br.com.wta.frete.clientes.entity.DetalheCliente;
 import br.com.wta.frete.colaboradores.entity.Transportador;
 import br.com.wta.frete.core.entity.enums.StatusServico;
@@ -102,6 +105,7 @@ public class OrdemServico {
 	 * DEFAULT 'PENDENTE').
 	 */
 	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM) // Mapeia o ENUM corretamente para o PostgreSQL
 	@Column(name = "status", nullable = false, length = 20)
 	private StatusServico status = StatusServico.PENDENTE;
 }

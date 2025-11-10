@@ -118,9 +118,51 @@ public class OrdemServicoService {
     }
 
     /**
-     * Método de exemplo.
+     * Atualiza o Status de uma Ordem de Serviço existente.
+     * <p>
+     * Nota: Este método é transacional (devido ao @Transactional na classe)
+     * e reverte se houver falha (ex: OS não encontrada ou status inválido).
+     * </p>
+     *
+     * @param id               O ID da Ordem de Serviço a ser atualizada.
+     * @param novoStatusString A string contendo o nome ou descrição do novo Status.
+     * @return O DTO de resposta da Ordem de Serviço atualizada.
+     * @throws ResourceNotFoundException Se a Ordem de Serviço não for encontrada.
+     * @throws IllegalArgumentException  Se o novo status for inválido.
      */
-    public String status() {
-        return "OrdemServicoService está operacional.";
+    @SuppressWarnings("null")
+    public OrdemServicoResponse atualizarStatus(Long id, String novoStatusString) {
+
+        // 1. BUSCA DA ORDEM DE SERVIÇO
+        // O método 'buscarPorId' garante que a OS exista e lança a exceção se não
+        // for encontrada.
+        OrdemServico ordem = ordemServicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ordem de Serviço não encontrada com ID: " + id));
+
+        // 2. CONVERSÃO E VALIDAÇÃO DO NOVO STATUS
+        StatusServico novoStatusEnum = ordemServicoMapper.stringToStatusServico(novoStatusString);
+
+        if (novoStatusEnum == null) {
+            throw new IllegalArgumentException(
+                    "Status inválido ou não reconhecido: " + novoStatusString
+                            + ". Status válidos são: PENDENTE, CONFIRMADO, COLETADO, EM_TRANSPORTE, ENTREGUE, CANCELADO.");
+        }
+
+        // Regra de Negócio Opcional: Impedir mudança se já estiver CANCELADO/ENTREGUE
+        if (ordem.getStatus() == StatusServico.ENTREGUE || ordem.getStatus() == StatusServico.CANCELADO) {
+            throw new IllegalStateException(
+                    "Não é possível alterar o status de uma Ordem de Serviço finalizada ou cancelada.");
+        }
+
+        // 3. ATUALIZAÇÃO DO STATUS
+        ordem.setStatus(novoStatusEnum);
+
+        // 4. PERSISTÊNCIA (A transação garante o 'flush', mas o 'save' é explícito)
+        // O save aqui é opcional, pois o objeto é 'managed' (rastreado) pela JPA
+        // dentro da transação, mas o salvamos para clareza.
+        OrdemServico ordemAtualizada = ordemServicoRepository.save(ordem);
+
+        // 5. RETORNO
+        return ordemServicoMapper.toResponse(ordemAtualizada);
     }
 }

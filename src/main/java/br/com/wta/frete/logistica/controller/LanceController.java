@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
  * Endpoint: POST /logistica/fretes/{freteId}/lances
  */
 @RestController
-@RequestMapping("/logistica/fretes/{freteId}/lances")
+@RequestMapping("/api/v1/logistica/fretes/{freteId}/lances")
 @RequiredArgsConstructor
 public class LanceController {
 

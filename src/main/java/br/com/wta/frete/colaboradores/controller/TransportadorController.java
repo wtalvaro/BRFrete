@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/colaboradores/transportadores")
+@RequestMapping("/api/v1/colaboradores/transportadores")
 @Tag(name = "Transportador", description = "Endpoints para gerenciamento de Transportadores")
 public class TransportadorController {
 

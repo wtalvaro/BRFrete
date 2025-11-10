@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Responsável por gerenciar as requisições HTTP da API.
  */
 @RestController
-@RequestMapping("/api/pessoas") // Prefixo padrão para endpoints de API
+@RequestMapping("/api/v1/pessoas") // Prefixo padrão para endpoints de API
 @Tag(name = "Pessoa", description = "Endpoints para o cadastro e gestão de dados básicos de usuários (Pessoas).") // NOVO
 public class PessoaController {
 

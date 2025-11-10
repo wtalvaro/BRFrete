@@ -15,7 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid; // <--- Importação adicionada para validar o corpo
 
 @RestController
-@RequestMapping("/api/colaboradores/lojistas")
+@RequestMapping("/api/v1/colaboradores/lojistas")
 @Tag(name = "Lojista", description = "Endpoints para gerenciamento de Lojistas")
 public class LojistaController {
 

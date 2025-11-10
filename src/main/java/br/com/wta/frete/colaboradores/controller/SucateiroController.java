@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid; // Importação necessária
 
 @RestController
-@RequestMapping("/api/colaboradores/sucateiros")
+@RequestMapping("/api/v1/colaboradores/sucateiros")
 @Tag(name = "Sucateiro", description = "Endpoints para gerenciamento de Sucateiros")
 public class SucateiroController {
 

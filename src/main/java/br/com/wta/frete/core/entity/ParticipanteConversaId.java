@@ -1,12 +1,12 @@
 package br.com.wta.frete.core.entity;
 
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Column;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Embeddable
 @Data
