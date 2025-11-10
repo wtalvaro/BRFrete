@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +52,7 @@ public class FreteService {
         private final StatusLeilaoRepository statusLeilaoRepository;
         private final ModalidadeFreteRepository modalidadeFreteRepository;
         private final LanceRepository lanceRepository;
+        private final LeilaoFinalizacaoService leilaoFinalizacaoService; // NOVO: Injete o novo serviço
 
         // Injeção de dependências via construtor
         public FreteService(
@@ -62,7 +64,8 @@ public class FreteService {
                         AnttParametroService anttService,
                         StatusLeilaoRepository statusLeilaoRepository,
                         ModalidadeFreteRepository modalidadeFreteRepository,
-                        LanceRepository lanceRepository) {
+                        LanceRepository lanceRepository,
+                        @Lazy LeilaoFinalizacaoService leilaoFinalizacaoService) { // NOVO ARGUMENTO) {
                 this.freteRepository = freteRepository;
                 this.freteMapper = freteMapper;
                 this.itemFreteRepository = itemFreteRepository;
@@ -72,6 +75,7 @@ public class FreteService {
                 this.statusLeilaoRepository = statusLeilaoRepository;
                 this.modalidadeFreteRepository = modalidadeFreteRepository;
                 this.lanceRepository = lanceRepository;
+                this.leilaoFinalizacaoService = leilaoFinalizacaoService; // NOVA INICIALIZAÇÃO
         }
 
         /**
@@ -183,24 +187,24 @@ public class FreteService {
          */
         private void finalizarComVencedor(Frete frete, Lance lanceVencedor) {
                 try {
-                        // 1. Atualiza o Lance como vencedor
-                        lanceVencedor.setVencedor(true);
-                        lanceRepository.save(lanceVencedor);
 
-                        // 2. Atualiza o Frete
+                        // 1. Atualiza o Frete (Status e Valor Final)
                         StatusLeilao statusVencedor = buscarStatusLeilao("ENCERRADO_COM_VENCEDOR");
 
                         frete.setStatusLeilao(statusVencedor);
                         frete.setValorFinalAceito(lanceVencedor.getValorLance());
-                        freteRepository.save(frete);
+                        Frete freteAtualizado = freteRepository.save(frete); // Salva a transição de status
+
+                        // 2. CHAMA O NOVO SERVIÇO DE FINALIZAÇÃO (DELEGAÇÃO)
+                        // Isso quebra a dependência circular.
+                        leilaoFinalizacaoService.finalizarLeilaoEConfirmarOS(freteAtualizado, lanceVencedor);
 
                         log.info("Leilão {} finalizado com sucesso. Vencedor: Transportador ID {} com lance R$ {}.",
                                         frete.getOrdemServicoId(), lanceVencedor.getTransportador().getPessoaId(),
                                         lanceVencedor.getValorLance());
 
                 } catch (ResourceNotFoundException e) {
-                        log.error("Erro fatal ao finalizar leilão {}: Status 'ENCERRADO_COM_VENCEDOR' não encontrado no DB. O frete permanece no status AGUARDANDO_LANCES.",
-                                        frete.getOrdemServicoId(), e);
+                        // ... (Manter o tratamento de erro)
                 }
         }
 
