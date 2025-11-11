@@ -62,17 +62,17 @@ public class LanceService {
 
         // Busca o lance anterior do transportador neste frete
         Optional<Lance> optionalLanceExistente = lanceRepository
-                .findByFreteOrdemServico_IdAndTransportadorPessoaId(freteId, request.transportadorId());
+                .findByFreteFreteIdAndTransportadorPessoaId(freteId, request.transportadorId());
 
         Lance lanceSalvo;
 
         if (optionalLanceExistente.isPresent()) {
             // Se já tem lance: verifica se o transportador foi superado e se o novo lance é
-            // válido.
-            lanceSalvo = rebidLance(frete, optionalLanceExistente.get(), request.valorLance());
+            // válido (atualização).
+            lanceSalvo = atualizarLanceExistente(frete, optionalLanceExistente.get(), request.valorLance());
         } else {
-            // Se for o primeiro lance: verifica se o novo lance é o melhor.
-            lanceSalvo = criarNovoLance(frete, transportador, request.valorLance());
+            // Se for o primeiro lance do transportador: valida e cria.
+            lanceSalvo = criarPrimeiroLance(frete, transportador, request.valorLance());
         }
 
         return lanceMapper.toResponse(lanceSalvo);
@@ -81,24 +81,11 @@ public class LanceService {
     // --- LÓGICA DE CRIAÇÃO E RE-BIDDING ---
 
     @SuppressWarnings("null")
-    private Lance criarNovoLance(Frete frete, Transportador transportador, BigDecimal valorProposto) {
+    private Lance criarPrimeiroLance(Frete frete, Transportador transportador, BigDecimal valorProposto) {
 
-        Optional<Lance> melhorLanceAtual = lanceRepository
-                .findTopByFreteOrdemServico_IdOrderByValorPropostoAsc(frete.getOrdemServicoId());
-
-        if (melhorLanceAtual.isPresent()) {
-            // Se já houver um lance, o novo lance deve obedecer à regra de decremento
-            // competitivo
-            validarDecrementoCompetitivo(melhorLanceAtual.get().getValorLance(), valorProposto,
-                    "para iniciar a disputa");
-        } else {
-            // Caso não haja lances, não há decremento competitivo a ser validado (apenas
-            // valor positivo)
-            if (valorProposto.compareTo(BigDecimal.ZERO) <= 0) {
-                // CORREÇÃO: Usando construtor com 2 Strings
-                throw new InvalidDataException("O valor do primeiro lance deve ser positivo.", CODIGO_ERRO_VALIDACAO);
-            }
-        }
+        // Valida o valor proposto contra o melhor lance atual (se houver).
+        // Para o primeiro lance, o 'lanceAnterior' é nulo.
+        validarValorDoLance(frete, null, valorProposto);
 
         Lance novoLance = Lance.builder()
                 .frete(frete)
@@ -111,44 +98,12 @@ public class LanceService {
         return lanceRepository.save(novoLance);
     }
 
-    private Lance rebidLance(Frete frete, Lance lanceExistente, BigDecimal novoValorProposto) {
+    private Lance atualizarLanceExistente(Frete frete, Lance lanceExistente, BigDecimal novoValorProposto) {
 
-        // 1. RE-BIDDING PERMISSION (Regra: O transportador só pode dar um novo lance se
-        // seu lance não for o melhor)
-        Optional<Lance> melhorLanceAtualOptional = lanceRepository
-                .findTopByFreteOrdemServico_IdOrderByValorPropostoAsc(frete.getOrdemServicoId());
-
-        if (melhorLanceAtualOptional.isPresent()) {
-            Lance melhorLanceAtual = melhorLanceAtualOptional.get();
-
-            if (melhorLanceAtual.getId().equals(lanceExistente.getId())) {
-                // Se o ID do melhor lance atual for o mesmo do transportador, ele está
-                // BLOQUEADO.
-                // CORREÇÃO: Usando construtor com 2 Strings
-                throw new InvalidDataException(
-                        "Você já possui o melhor lance (R$ " + melhorLanceAtual.getValorLance().toPlainString()
-                                + ") neste leilão. Aguarde a competição para poder superá-lo.",
-                        CODIGO_ERRO_VALIDACAO);
-            }
-
-            // 2. DECREMENTO COMPETITIVO (Regra: R$ 5,00 inferior ao melhor lance atual - Y)
-            validarDecrementoCompetitivo(melhorLanceAtual.getValorLance(), novoValorProposto,
-                    "para superar o lance atual (R$ " + melhorLanceAtual.getValorLance().toPlainString() + ")");
-        } else {
-            // Caso inesperado: se o lance existe, o melhor lance deveria existir
-            // CORREÇÃO: Usando construtor com 2 Strings
-            throw new InvalidDataException("Erro de lógica do leilão: Lance existente sem melhor lance geral.",
-                    CODIGO_ERRO_VALIDACAO);
-        }
-
-        // 3. O lance não pode ser pior do que o próprio lance anterior
-        if (novoValorProposto.compareTo(lanceExistente.getValorLance()) >= 0) {
-            // CORREÇÃO: Usando construtor com 2 Strings
-            throw new InvalidDataException(
-                    "O novo lance (" + novoValorProposto + ") deve ser ESTRITAMENTE MENOR que o seu lance anterior de: "
-                            + lanceExistente.getValorLance(),
-                    CODIGO_ERRO_VALIDACAO);
-        }
+        // 1. REGRAS DE VALIDAÇÃO UNIFICADAS
+        // O método agora recebe o lance anterior do próprio transportador para aplicar
+        // todas as regras.
+        validarValorDoLance(frete, lanceExistente, novoValorProposto);
 
         // 4. ATUALIZAÇÃO
         lanceExistente.setValorLance(novoValorProposto);
@@ -185,21 +140,58 @@ public class LanceService {
     }
 
     /**
-     * Regra Anti-Spam (R$ 5,00) aplicada ao lance a ser batido.
+     * Unifica todas as regras de validação de valor para um novo lance ou um
+     * re-bid.
      */
-    private void validarDecrementoCompetitivo(BigDecimal valorCompetitivo, BigDecimal novoValor, String contexto) {
-        // Calcula o valor MÁXIMO que o novo lance pode ter: (Valor a Bater - Decremento
-        // Mínimo)
-        BigDecimal valorMaximoPermitido = valorCompetitivo.subtract(DECREMENTO_MINIMO);
+    private void validarValorDoLance(Frete frete, Lance lanceAnterior, BigDecimal novoValor) {
+        // Busca o melhor lance atual no leilão para comparar.
+        Optional<Lance> melhorLanceAtualOpt = lanceRepository
+                .findTopByFrete_OrdemServico_IdOrderByValorLanceAsc(frete.getOrdemServicoId());
 
-        // Se o novo valor for MAIOR que o valor máximo permitido, ele é rejeitado.
-        if (novoValor.compareTo(valorMaximoPermitido) > 0) {
-            // CORREÇÃO: Usando construtor com 2 Strings
+        // Regra 1: O valor do lance deve ser positivo.
+        if (novoValor.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidDataException("O valor do lance deve ser positivo.", CODIGO_ERRO_VALIDACAO);
+        }
+
+        // Regra 2: Se o transportador já tem um lance, o novo deve ser menor.
+        if (lanceAnterior != null && novoValor.compareTo(lanceAnterior.getValorLance()) >= 0) {
             throw new InvalidDataException(
-                    "O lance deve ser de pelo menos R$ " + DECREMENTO_MINIMO.toPlainString() +
-                            " inferior ao lance a ser batido. O valor máximo permitido " + contexto + " é de R$ "
-                            + valorMaximoPermitido.toPlainString() + ".",
+                    "O novo lance (R$ " + novoValor.toPlainString()
+                            + ") deve ser estritamente menor que o seu lance anterior (R$ "
+                            + lanceAnterior.getValorLance().toPlainString() + ").",
                     CODIGO_ERRO_VALIDACAO);
         }
+
+        if (melhorLanceAtualOpt.isPresent()) {
+            Lance melhorLanceAtual = melhorLanceAtualOpt.get();
+
+            // Regra 3: O transportador não pode dar um novo lance se já possui o melhor.
+            if (lanceAnterior != null && melhorLanceAtual.getId().equals(lanceAnterior.getId())) {
+                throw new InvalidDataException(
+                        "Você já possui o melhor lance (R$ " + melhorLanceAtual.getValorLance().toPlainString()
+                                + ") neste leilão. Aguarde a competição para poder superá-lo.",
+                        CODIGO_ERRO_VALIDACAO);
+            }
+
+            // Regra 4: O novo lance deve ser competitivamente menor que o melhor lance
+            // atual.
+            BigDecimal valorMaximoPermitido = melhorLanceAtual.getValorLance().subtract(DECREMENTO_MINIMO);
+            if (novoValor.compareTo(valorMaximoPermitido) > 0) {
+                throw new InvalidDataException(
+                        "O lance deve ser de pelo menos R$ " + DECREMENTO_MINIMO.toPlainString()
+                                + " inferior ao melhor lance atual (R$ "
+                                + melhorLanceAtual.getValorLance().toPlainString()
+                                + "). Valor máximo permitido: R$ " + valorMaximoPermitido.toPlainString(),
+                        CODIGO_ERRO_VALIDACAO);
+            }
+        } else {
+            // Se não há melhor lance, este é o primeiro lance do leilão.
+            // A validação de valor positivo (Regra 1) já é suficiente.
+            if (lanceAnterior != null) {
+                // Cenário de erro de consistência de dados.
+                throw new IllegalStateException("Erro de lógica do leilão: Lance anterior encontrado, mas nenhum melhor lance geral existe.");
+            }
+        }
     }
+
 }

@@ -218,13 +218,8 @@ public class FreteService {
          * @return O Lance com o menor valor, se existir.
          */
         private Optional<Lance> encontrarLanceVencedor(Frete frete) {
-                // Encontra todos os lances válidos para este frete (usando o repository
-                // injetado)
-                List<Lance> lances = lanceRepository.findByFreteFreteId(frete.getFreteId());
-
-                // O leilão de frete é reverso, então o vencedor é o menor valor.
-                return lances.stream()
-                                .min((l1, l2) -> l1.getValorLance().compareTo(l2.getValorLance()));
+                // Otimização: Delega a busca pelo menor lance diretamente ao banco de dados.
+                return lanceRepository.findTopByFrete_OrdemServico_IdOrderByValorLanceAsc(frete.getOrdemServicoId());
         }
 
         /**

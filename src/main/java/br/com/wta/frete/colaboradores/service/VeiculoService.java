@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.wta.frete.colaboradores.controller.dto.VeiculoRequest;
 import br.com.wta.frete.colaboradores.controller.dto.VeiculoResponse;
 import br.com.wta.frete.colaboradores.entity.Transportador;
+import java.util.Optional;
 import br.com.wta.frete.colaboradores.entity.Veiculo;
 import br.com.wta.frete.colaboradores.repository.TransportadorRepository;
 import br.com.wta.frete.colaboradores.repository.VeiculoRepository;
@@ -67,21 +68,26 @@ public class VeiculoService {
      * @throws InvalidDataException Se a placa ou o renavam já existirem.
      */
     private void validarUnicidade(String placa, String renavam) {
-        // Busca por Placa (ignora o case)
-        if (veiculoRepository.findByPlaca(placa).isPresent()) {
-            // CORREÇÃO DA EXCEÇÃO: Passando dois argumentos para o construtor
-            throw new InvalidDataException(
-                    "Veículo já cadastrado com a placa: " + placa, // Mensagem do Desenvolvedor
-                    "A placa informada já está em uso." // Mensagem Amigável
-            );
-        }
-        // Busca por Renavam (ignora o case)
-        if (veiculoRepository.findByRenavam(renavam).isPresent()) {
-            // CORREÇÃO DA EXCEÇÃO: Passando dois argumentos para o construtor
-            throw new InvalidDataException(
-                    "Veículo já cadastrado com o renavam: " + renavam, // Mensagem do Desenvolvedor
-                    "O Renavam informado já está em uso." // Mensagem Amigável
-            );
+        // OTIMIZAÇÃO: Realiza uma única consulta ao banco para verificar placa OU
+        // renavam.
+        // A busca deve ser case-insensitive para maior robustez.
+        // Assumindo que o método findByPlacaIgnoreCaseOrRenavamIgnoreCase existe no
+        // repositório.
+        Optional<Veiculo> veiculoExistente = veiculoRepository.findByPlacaIgnoreCaseOrRenavamIgnoreCase(placa, renavam);
+
+        if (veiculoExistente.isPresent()) {
+            Veiculo veiculo = veiculoExistente.get();
+            // Verifica qual campo causou a duplicidade para retornar uma mensagem
+            // específica.
+            if (veiculo.getPlaca().equalsIgnoreCase(placa)) {
+                throw new InvalidDataException(
+                        "Veículo já cadastrado com a placa: " + placa,
+                        "A placa informada já está em uso.");
+            } else { // Se não foi a placa, foi o renavam.
+                throw new InvalidDataException(
+                        "Veículo já cadastrado com o renavam: " + renavam,
+                        "O Renavam informado já está em uso.");
+            }
         }
     }
 }

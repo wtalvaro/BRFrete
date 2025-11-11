@@ -11,7 +11,7 @@ import br.com.wta.frete.core.entity.PessoaPerfilId;
 import br.com.wta.frete.core.repository.PessoaRepository;
 import br.com.wta.frete.core.repository.PerfilRepository;
 import br.com.wta.frete.core.repository.PessoaPerfilRepository;
-import br.com.wta.frete.shared.exception.InvalidDataException;
+import br.com.wta.frete.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,22 +47,19 @@ public class TransportadorService {
      * @param pessoaId O ID da pessoa existente que receberá o perfil.
      * 
      * @return TransportadorResponse com os dados do novo transportador.
-     * @throws InvalidDataException se a Pessoa não for encontrada ou o Perfil não
-     *                              existir.
+     * @throws ResourceNotFoundException se a Pessoa não for encontrada.
+     * @throws IllegalStateException     se o Perfil 'TRANSPORTADOR' não existir.
      */
-    @SuppressWarnings("null")
     @Transactional
     public TransportadorResponse adicionarPerfilTransportador(Long pessoaId) {
         // 1. Busca e Validação da Pessoa
         Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                .orElseThrow(() -> new InvalidDataException("Pessoa com ID " + pessoaId + " não encontrada.",
-                        "PERSON_NOT_FOUND"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa com ID " + pessoaId + " não encontrada."));
 
         // 2. Busca o Perfil 'TRANSPORTADOR'
         Perfil perfilTransportador = perfilRepository.findByNomePerfil("TRANSPORTADOR")
-                .orElseThrow(() -> new InvalidDataException(
-                        "Perfil 'TRANSPORTADOR' não encontrado no sistema. Verifique a tabela 'core.perfis'.",
-                        "PROFILE_NOT_FOUND"));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Perfil 'TRANSPORTADOR' não encontrado. Verifique a inicialização de dados."));
 
         // 3. Verifica se o registro de Transportador JÁ EXISTE e cria se necessário.
         Optional<Transportador> transportadorExistente = transportadorRepository.findByPessoaId(pessoaId);
@@ -79,15 +76,9 @@ public class TransportadorService {
         // Usamos PessoaPerfilId para garantir a unicidade da associação
         PessoaPerfilId pessoaPerfilId = new PessoaPerfilId(pessoaId, perfilTransportador.getId());
 
-        // Tentamos carregar a associação existente ou criamos uma nova
-        Optional<PessoaPerfil> associacaoExistente = pessoaPerfilRepository.findById(pessoaPerfilId);
-
-        if (associacaoExistente.isEmpty()) {
-            PessoaPerfil novaPessoaPerfil = new PessoaPerfil();
-            novaPessoaPerfil.setId(pessoaPerfilId);
-            novaPessoaPerfil.setPessoa(pessoa);
-            novaPessoaPerfil.setPerfil(perfilTransportador);
-            pessoaPerfilRepository.save(novaPessoaPerfil);
+        // Verifica se a associação já existe antes de tentar criá-la (Idempotência)
+        if (pessoaPerfilRepository.findById(pessoaPerfilId).isEmpty()) {
+            pessoaPerfilRepository.save(new PessoaPerfil(pessoa, perfilTransportador));
         }
 
         // 5. Atualiza o flag isColaborador na Pessoa (se já não for colaborador)

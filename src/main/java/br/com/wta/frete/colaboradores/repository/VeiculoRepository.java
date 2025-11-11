@@ -24,4 +24,7 @@ public interface VeiculoRepository extends JpaRepository<Veiculo, Integer> {
 	 * de unicidade no cadastro.
 	 */
 	Optional<Veiculo> findByRenavam(String renavam);
+
+	// NOVO MÉTODO: Busca por placa OU renavam, ignorando o case.
+    Optional<Veiculo> findByPlacaIgnoreCaseOrRenavamIgnoreCase(String placa, String renavam);
 }
