@@ -8,47 +8,46 @@ import java.util.Objects;
  * DTO de Resposta para a entidade Produto (marketplace.produtos), transformado
  * em um POJO (Plain Old Java Object) imutável.
  *
- * NOTA TÉCNICA: A escolha de utilizar um POJO imutável, em detrimento do
- * recurso 'record' do Java (que simplificaria o código), foi motivada por
- * **incompatibilidade no ambiente de desenvolvimento (STS/Eclipse JDT)**. * O
- * processamento de anotações (APT) do MapStruct, ao inspecionar a classe
- * 'record', causava um **Internal error / NullPointerException** na IDE. A
- * manutenção desta classe como POJO imutável garante a estabilidade da
- * compilação no ambiente de desenvolvimento. * Imutabilidade garantida por: 1.
- * Classe declarada como 'final' (não pode ser estendida). 2. Todos os campos
- * são 'private final' (não podem ser alterados após a criação). 3. Ausência de
- * métodos 'setters'.
+ * ATUALIZAÇÃO: Alinhamento com a Entidade 'Produto'.
+ * - Renomeado: nomeProduto para titulo.
+ * - Adicionado: quantidade, unidadeMedida, isDoacao, isDisponivel.
+ * - Renomeado: dataListagem para dataPublicacao.
  */
 public final class ProdutoResponse {
 
 	private final Integer produtoId;
 	private final Long lojistaPessoaId;
 	private final Integer categoriaId;
-	private final String nomeProduto;
+	private final String titulo; // Renomeado
 	private final String descricao;
 	private final String sku;
 	private final BigDecimal preco;
-	private final BigDecimal pesoKg;
+	private final Integer quantidade; // Novo campo
+	private final String unidadeMedida; // Novo campo
+	private final Boolean isDoacao; // Novo campo
+	private final Boolean isDisponivel; // Novo campo
 	private final String statusDisponibilidade;
-	private final ZonedDateTime dataListagem;
+	private final ZonedDateTime dataPublicacao; // Renomeado
 
 	/**
-	 * Construtor canônico para inicializar todos os campos. É o único ponto onde os
-	 * valores dos campos 'final' podem ser definidos.
+	 * Construtor canônico para inicializar todos os campos.
 	 */
-	public ProdutoResponse(Integer produtoId, Long lojistaPessoaId, Integer categoriaId, String nomeProduto,
-			String descricao, String sku, BigDecimal preco, BigDecimal pesoKg, String statusDisponibilidade,
-			ZonedDateTime dataListagem) {
+	public ProdutoResponse(Integer produtoId, Long lojistaPessoaId, Integer categoriaId, String titulo,
+			String descricao, String sku, BigDecimal preco, Integer quantidade, String unidadeMedida, Boolean isDoacao,
+			Boolean isDisponivel, String statusDisponibilidade, ZonedDateTime dataPublicacao) {
 		this.produtoId = produtoId;
 		this.lojistaPessoaId = lojistaPessoaId;
 		this.categoriaId = categoriaId;
-		this.nomeProduto = nomeProduto;
+		this.titulo = titulo;
 		this.descricao = descricao;
 		this.sku = sku;
 		this.preco = preco;
-		this.pesoKg = pesoKg;
+		this.quantidade = quantidade;
+		this.unidadeMedida = unidadeMedida;
+		this.isDoacao = isDoacao;
+		this.isDisponivel = isDisponivel;
 		this.statusDisponibilidade = statusDisponibilidade;
-		this.dataListagem = dataListagem;
+		this.dataPublicacao = dataPublicacao;
 	}
 
 	// --- Métodos de Acesso (Getters) ---
@@ -65,8 +64,8 @@ public final class ProdutoResponse {
 		return categoriaId;
 	}
 
-	public String getNomeProduto() {
-		return nomeProduto;
+	public String getTitulo() { // Renomeado
+		return titulo;
 	}
 
 	public String getDescricao() {
@@ -81,23 +80,32 @@ public final class ProdutoResponse {
 		return preco;
 	}
 
-	public BigDecimal getPesoKg() {
-		return pesoKg;
+	public Integer getQuantidade() { // Novo Getter
+		return quantidade;
+	}
+
+	public String getUnidadeMedida() { // Novo Getter
+		return unidadeMedida;
+	}
+
+	public Boolean getIsDoacao() { // Novo Getter
+		return isDoacao;
+	}
+
+	public Boolean getIsDisponivel() { // Novo Getter
+		return isDisponivel;
 	}
 
 	public String getStatusDisponibilidade() {
 		return statusDisponibilidade;
 	}
 
-	public ZonedDateTime getDataListagem() {
-		return dataListagem;
+	public ZonedDateTime getDataPublicacao() { // Renomeado
+		return dataPublicacao;
 	}
 
 	// --- Métodos Padrão Sobrescritos ---
 
-	/**
-	 * Compara se este objeto é igual a outro, baseando-se em todos os campos.
-	 */
 	@Override
 	public boolean equals(Object o) {
 		if (this == o)
@@ -106,31 +114,27 @@ public final class ProdutoResponse {
 			return false;
 		ProdutoResponse that = (ProdutoResponse) o;
 		return Objects.equals(produtoId, that.produtoId) && Objects.equals(lojistaPessoaId, that.lojistaPessoaId)
-				&& Objects.equals(categoriaId, that.categoriaId) && Objects.equals(nomeProduto, that.nomeProduto)
+				&& Objects.equals(categoriaId, that.categoriaId) && Objects.equals(titulo, that.titulo)
 				&& Objects.equals(descricao, that.descricao) && Objects.equals(sku, that.sku)
-				&& Objects.equals(preco, that.preco) && Objects.equals(pesoKg, that.pesoKg)
+				&& Objects.equals(preco, that.preco) && Objects.equals(quantidade, that.quantidade)
+				&& Objects.equals(unidadeMedida, that.unidadeMedida) && Objects.equals(isDoacao, that.isDoacao)
+				&& Objects.equals(isDisponivel, that.isDisponivel)
 				&& Objects.equals(statusDisponibilidade, that.statusDisponibilidade)
-				&& Objects.equals(dataListagem, that.dataListagem);
+				&& Objects.equals(dataPublicacao, that.dataPublicacao);
 	}
 
-	/**
-	 * Gera um código de hash único, baseado em todos os campos. Essencial para o
-	 * funcionamento correto em coleções hash (como HashMap).
-	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(produtoId, lojistaPessoaId, categoriaId, nomeProduto, descricao, sku, preco, pesoKg,
-				statusDisponibilidade, dataListagem);
+		return Objects.hash(produtoId, lojistaPessoaId, categoriaId, titulo, descricao, sku, preco, quantidade,
+				unidadeMedida, isDoacao, isDisponivel, statusDisponibilidade, dataPublicacao);
 	}
 
-	/**
-	 * Retorna uma representação textual do objeto, útil para logs e depuração.
-	 */
 	@Override
 	public String toString() {
 		return "ProdutoResponse{" + "produtoId=" + produtoId + ", lojistaPessoaId=" + lojistaPessoaId + ", categoriaId="
-				+ categoriaId + ", nomeProduto='" + nomeProduto + '\'' + ", descricao='" + descricao + '\'' + ", sku='"
-				+ sku + '\'' + ", preco=" + preco + ", pesoKg=" + pesoKg + ", statusDisponibilidade='"
-				+ statusDisponibilidade + '\'' + ", dataListagem=" + dataListagem + '}';
+				+ categoriaId + ", titulo='" + titulo + '\'' + ", descricao='" + descricao + '\'' + ", sku='" + sku
+				+ '\'' + ", preco=" + preco + ", quantidade=" + quantidade + ", unidadeMedida='" + unidadeMedida
+				+ '\'' + ", isDoacao=" + isDoacao + ", isDisponivel=" + isDisponivel + ", statusDisponibilidade='"
+				+ statusDisponibilidade + '\'' + ", dataPublicacao=" + dataPublicacao + '}';
 	}
 }

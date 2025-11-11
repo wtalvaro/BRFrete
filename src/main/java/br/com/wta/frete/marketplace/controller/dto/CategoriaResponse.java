@@ -1,5 +1,7 @@
 package br.com.wta.frete.marketplace.controller.dto;
 
+import br.com.wta.frete.marketplace.entity.enums.TipoGeralEnum;
+
 /**
  * DTO de Resposta para a entidade Categoria (marketplace.categorias). Retorna
  * os detalhes de uma categoria de produto (Lookup).
@@ -11,6 +13,6 @@ public record CategoriaResponse(
 		// Nome da categoria (ex: "ELETRONICOS", "MATERIAIS_RECICLAVEIS")
 		String nomeCategoria,
 
-		// Descrição detalhada da categoria
-		String descricao) {
+		// NOVO CAMPO: Tipo geral da categoria
+		TipoGeralEnum tipoGeral) {
 }

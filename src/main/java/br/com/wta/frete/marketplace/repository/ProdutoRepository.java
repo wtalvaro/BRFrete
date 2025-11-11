@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * Repositório para a entidade Produto (marketplace.produtos).
+ * * ATUALIZAÇÃO: Ajustado o método de busca por nome/título.
  */
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
@@ -25,7 +26,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
 	Produto findBySku(String sku);
 
 	/**
-	 * Busca produtos por nome, ignorando maiúsculas/minúsculas.
+	 * Busca produtos por Título, ignorando maiúsculas/minúsculas.
+	 * (Campo 'titulo' no banco de dados, mapeado na Entidade).
 	 */
-	List<Produto> findByNomeProdutoContainingIgnoreCase(String nome);
+	List<Produto> findByTituloContainingIgnoreCase(String titulo);
 }

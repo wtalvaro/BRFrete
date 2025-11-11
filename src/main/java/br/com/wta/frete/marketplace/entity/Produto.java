@@ -3,9 +3,15 @@ package br.com.wta.frete.marketplace.entity;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import br.com.wta.frete.colaboradores.entity.Lojista;
+import br.com.wta.frete.marketplace.entity.enums.UnidadeMedidaEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,10 +27,15 @@ import lombok.NoArgsConstructor;
 /**
  * Mapeia a tabela 'marketplace.produtos'. Representa um produto disponível para
  * venda no marketplace.
+ * * ATUALIZAÇÃO: Alinhamento com o esquema V1__Initial_Schema.sql.
+ * - Renomeado: nomeProduto para titulo.
+ * - Renomeado: dataListagem para dataPublicacao.
+ * - Adicionado: quantidade, unidadeMedida, isDisponivel, isDoacao.
+ * - Adicionada a restrição de unicidade para SKU/Lojista (conforme SQL).
  */
 @Entity
 @Table(name = "produtos", schema = "marketplace", uniqueConstraints = {
-		@UniqueConstraint(columnNames = { "sku", "lojista_pessoa_id" }) // SKU deve ser único por Lojista
+		@UniqueConstraint(columnNames = { "sku", "vendedor_id" }) // SKU deve ser único por Lojista (vendedor_id)
 })
 @Data
 @NoArgsConstructor
@@ -42,11 +53,11 @@ public class Produto {
 	// --- Relacionamentos (Chaves Estrangeiras) ---
 
 	/**
-	 * Lojista que está vendendo o produto (lojista_pessoa_id BIGINT NOT NULL).
+	 * Lojista que está vendendo o produto (vendedor_id BIGINT NOT NULL).
 	 * Relacionamento Many-to-One com Lojista.
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "lojista_pessoa_id", nullable = false)
+	@JoinColumn(name = "vendedor_id", nullable = false)
 	private Lojista lojista;
 
 	/**
@@ -57,13 +68,14 @@ public class Produto {
 	@JoinColumn(name = "categoria_id", nullable = false)
 	private Categoria categoria;
 
-	// --- Dados do Produto ---
+	// --- Dados do Produto (ATUALIZADOS) ---
 
 	/**
-	 * Nome do produto (VARCHAR(255) NOT NULL).
+	 * Título/Nome do produto (titulo VARCHAR(255) NOT NULL) - Anteriormente:
+	 * nome_produto.
 	 */
-	@Column(name = "nome_produto", nullable = false, length = 255)
-	private String nomeProduto;
+	@Column(name = "titulo", nullable = false, length = 255)
+	private String titulo; // Renomeado para 'titulo'
 
 	/**
 	 * Descrição detalhada do produto (TEXT).
@@ -84,21 +96,39 @@ public class Produto {
 	private BigDecimal preco;
 
 	/**
-	 * Peso do item em kg, para cálculo de frete (NUMERIC(10, 2)).
+	 * Quantidade de itens disponíveis (INTEGER NOT NULL DEFAULT 1).
 	 */
-	@Column(name = "peso_kg", precision = 10, scale = 2)
-	private BigDecimal pesoKg;
+	@Column(name = "quantidade", nullable = false)
+	private Integer quantidade; // Novo campo
 
 	/**
-	 * Status de disponibilidade (VARCHAR(20) NOT NULL DEFAULT 'DISPONIVEL').
+	 * Unidade de medida (ENUM marketplace.unidade_medida_enum).
+	 * NOTA: Assumindo que você tem uma classe Java para 'UnidadeMedidaEnum'.
+	 * Por simplicidade no mapeamento, usaremos 'String' ou o Enum customizado se
+	 * existir.
 	 */
-	@Column(name = "status_disponibilidade", nullable = false, length = 20)
-	private String statusDisponibilidade = "DISPONIVEL";
+	// Se a classe UnidadeMedidaEnum existir, use: @Enumerated(EnumType.STRING)
+	@Column(name = "unidade_medida", nullable = false, length = 10)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM) // Mapeia o ENUM corretamente para o PostgreSQL
+	@Enumerated(EnumType.STRING)
+	private UnidadeMedidaEnum unidadeMedida; // Novo campo
 
 	/**
-	 * Data de listagem do produto (TIMESTAMP WITH TIME ZONE DEFAULT
-	 * CURRENT_TIMESTAMP).
+	 * Se o produto está disponível para venda (BOOLEAN NOT NULL DEFAULT true).
 	 */
-	@Column(name = "data_listagem", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-	private ZonedDateTime dataListagem = ZonedDateTime.now();
+	@Column(name = "is_disponivel", nullable = false)
+	private Boolean isDisponivel; // Novo campo
+
+	/**
+	 * Se o produto é uma doação (BOOLEAN NOT NULL DEFAULT false).
+	 */
+	@Column(name = "is_doacao", nullable = false)
+	private Boolean isDoacao; // Novo campo
+
+	/**
+	 * Data de publicação/listagem do produto (TIMESTAMP WITH TIME ZONE) -
+	 * Anteriormente: data_listagem.
+	 */
+	@Column(name = "data_publicacao", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+	private ZonedDateTime dataPublicacao = ZonedDateTime.now(); // Renomeado para 'dataPublicacao'
 }

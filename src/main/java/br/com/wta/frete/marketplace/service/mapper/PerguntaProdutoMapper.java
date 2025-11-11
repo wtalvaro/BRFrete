@@ -4,25 +4,27 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import br.com.wta.frete.marketplace.controller.dto.PerguntaProdutoRequest;
 import br.com.wta.frete.marketplace.controller.dto.PerguntaProdutoResponse;
 import br.com.wta.frete.marketplace.entity.PerguntaProduto;
 
 /**
- * Interface Mapper MapStruct para a entidade PerguntaProduto. Gerencia a
- * conversão entre PerguntaProduto, PerguntaProdutoRequest e
- * PerguntaProdutoResponse.
+ * Interface Mapper MapStruct para a entidade PerguntaProduto.
+ * * ATUALIZAÇÃO: Alinhamento com o modelo de threading (pergunta_pai_id) e
+ * campos corrigidos.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = { ProdutoMapper.class })
 public interface PerguntaProdutoMapper {
 
+	// =================================================================
+	// 1. Mapeamento de Entity para Response (com auto-referência)
+	// =================================================================
 	/**
 	 * Converte a entidade PerguntaProduto (Entity) para o DTO de Resposta
 	 * (Response).
-	 * <p>
-	 * Realiza o mapeamento de campos simples e a conversão de IDs de objetos
-	 * aninhados (Produto e Autor).
+	 * O MapStruct gerará a lógica recursiva para mapear a lista 'respostas'.
 	 *
 	 * @param entity A entidade PerguntaProduto.
 	 * @return O DTO PerguntaProdutoResponse.
@@ -30,35 +32,50 @@ public interface PerguntaProdutoMapper {
 	@Mapping(source = "id", target = "perguntaId")
 	@Mapping(source = "produto.id", target = "produtoId")
 	@Mapping(source = "autor.id", target = "autorId")
-	// Mapeamento de nomeAutor (assumindo que Pessoa tem um campo 'nome')
 	@Mapping(source = "autor.nome", target = "nomeAutor")
+	@Mapping(source = "perguntaPai.id", target = "perguntaPaiId") // Mapeia o ID do pai
+	@Mapping(source = "textoConteudo", target = "textoConteudo") // Novo nome
+	@Mapping(source = "dataPublicacao", target = "dataPublicacao") // Novo nome/tipo
+	@Mapping(source = "isPublica", target = "isPublica")
 	PerguntaProdutoResponse toResponse(PerguntaProduto entity);
 
 	/**
 	 * Converte uma lista de entidades para uma lista de DTOs de Resposta.
-	 *
-	 * @param entities A lista de entidades PerguntaProduto.
-	 * @return A lista de DTOs PerguntaProdutoResponse.
 	 */
 	List<PerguntaProdutoResponse> toResponseList(List<PerguntaProduto> entities);
 
+	// =================================================================
+	// 2. Mapeamento de Request para Entity (Criação)
+	// =================================================================
 	/**
-	 * Converte o DTO de Requisição (Request) para a entidade PerguntaProduto
-	 * (Entity).
-	 * <p>
-	 * O campo 'id' é ignorado (autogerado). Os objetos de relacionamento 'produto'
-	 * e 'autor' são ignorados, pois a busca e atribuição dessas entidades (usando
-	 * produtoId e autorId do Request) será realizada na Camada de Serviço
-	 * (Service).
+	 * Converte o DTO de Requisição (Request) para a entidade PerguntaProduto.
 	 *
-	 * @param request O DTO PerguntaProdutoRequest.
-	 * @return A entidade PerguntaProduto.
+	 * Os objetos de relacionamento 'produto', 'autor' e 'perguntaPai' (para
+	 * respostas)
+	 * devem ser ignorados aqui e resolvidos na Camada de Serviço.
 	 */
 	@Mapping(target = "id", ignore = true)
 	@Mapping(target = "produto", ignore = true)
 	@Mapping(target = "autor", ignore = true)
-	// Os campos dataPergunta e dataResposta serão definidos pelo Hibernate/Serviço
-	@Mapping(target = "dataPergunta", ignore = true)
-	@Mapping(target = "dataResposta", ignore = true)
+	@Mapping(target = "perguntaPai", ignore = true) // Setado no Serviço usando perguntaPaiId
+	@Mapping(target = "respostas", ignore = true) // Não há respostas ao criar
+	@Mapping(target = "dataPublicacao", ignore = true) // Definido pela Entidade/BD
+	@Mapping(source = "textoConteudo", target = "textoConteudo")
+	@Mapping(source = "isPublica", target = "isPublica")
 	PerguntaProduto toEntity(PerguntaProdutoRequest request);
+
+	// =================================================================
+	// 3. Mapeamento de ATUALIZAÇÃO (update)
+	// =================================================================
+	/**
+	 * Atualiza uma Entidade PerguntaProduto existente com os dados do Request.
+	 * Usado primariamente para moderação (mudar isPublica) ou edição de conteúdo.
+	 */
+	@Mapping(target = "id", ignore = true)
+	@Mapping(target = "produto", ignore = true)
+	@Mapping(target = "autor", ignore = true)
+	@Mapping(target = "perguntaPai", ignore = true)
+	@Mapping(target = "respostas", ignore = true)
+	@Mapping(target = "dataPublicacao", ignore = true) // Mantém a data de criação
+	void updateEntity(PerguntaProdutoRequest request, @MappingTarget PerguntaProduto entity);
 }

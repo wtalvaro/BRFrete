@@ -5,13 +5,22 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime; // Importação correta para TIMESTAMP WITH TIME ZONE
+import java.util.List;
 
+// Assumindo a existência da entidade Pessoa para a chave estrangeira autor_id
 import br.com.wta.frete.core.entity.Pessoa;
 
 /**
  * Mapeia a tabela 'marketplace.perguntas_produto'. Representa uma pergunta
- * feita por um usuário sobre um Produto específico.
+ * feita por um usuário sobre um Produto ou uma Resposta a uma pergunta.
+ * * * ATUALIZAÇÃO: Alinhamento com o modelo de threading do SQL.
+ * - Campo 'resposta' removido.
+ * - Adicionado auto-relacionamento (perguntaPai e respostas) via
+ * pergunta_pai_id.
+ * - Campo 'textoConteudo' mapeado para 'texto_conteudo'.
+ * - Campo 'dataPublicacao' (ZonedDateTime) mapeado para 'data_publicacao'.
+ * - Adicionado 'isPublica'.
  */
 @Entity
 @Table(name = "perguntas_produto", schema = "marketplace")
@@ -28,47 +37,60 @@ public class PerguntaProduto {
 	@Column(name = "pergunta_id")
 	private Long id;
 
-	// Relacionamentos (Foreign Keys)
+	// --- Relacionamentos de Chave Estrangeira ---
 
 	/**
 	 * Chave estrangeira para o Produto (marketplace.produtos.produto_id).
-	 * Relacionamento Many-to-One (Muitas perguntas para um produto).
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "produto_id", nullable = false)
 	private Produto produto;
 
 	/**
-	 * Chave estrangeira para o Autor da pergunta (core.pessoas.pessoa_id).
-	 * Relacionamento Many-to-One (Muitas perguntas podem ter o mesmo autor).
+	 * Chave estrangeira para o Autor da pergunta/resposta (core.pessoas.pessoa_id).
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "autor_id", nullable = false)
 	private Pessoa autor;
 
-	// Campos de Dados
+	// --- Relacionamento de Threading (Auto-Referência) ---
 
 	/**
-	 * Conteúdo da pergunta (TEXT NOT NULL).
+	 * Se esta for uma resposta, aponta para a Pergunta/Comentário pai
+	 * (pergunta_pai_id). É NULO para perguntas principais.
 	 */
-	@Column(name = "texto_pergunta", nullable = false, columnDefinition = "TEXT")
-	private String textoPergunta;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "pergunta_pai_id")
+	private PerguntaProduto perguntaPai;
 
 	/**
-	 * Resposta do Lojista/Dono do Produto (TEXT). Pode ser nulo.
+	 * Lista de Respostas/Comentários a esta Pergunta.
 	 */
-	@Column(name = "resposta", columnDefinition = "TEXT")
-	private String resposta;
+	@OneToMany(mappedBy = "perguntaPai", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("dataPublicacao ASC") // Ordem cronológica das respostas
+	private List<PerguntaProduto> respostas;
+
+	// --- Dados ---
 
 	/**
-	 * Data e hora da pergunta (TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP).
+	 * Conteúdo da pergunta ou da resposta (texto_conteudo TEXT NOT NULL).
+	 * Antigamente 'textoPergunta' na sua Entity.
 	 */
-	@Column(name = "data_pergunta", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
-	private LocalDateTime dataPergunta = LocalDateTime.now();
+	@Column(name = "texto_conteudo", nullable = false, columnDefinition = "TEXT")
+	private String textoConteudo;
 
 	/**
-	 * Data e hora da resposta (TIMESTAMP WITH TIME ZONE). Pode ser nulo.
+	 * Data e hora da publicação (data_publicacao TIMESTAMP WITH TIME ZONE).
 	 */
-	@Column(name = "data_resposta", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-	private LocalDateTime dataResposta;
+	@Column(name = "data_publicacao", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+	private ZonedDateTime dataPublicacao = ZonedDateTime.now();
+
+	/**
+	 * Status de visibilidade (is_publica BOOLEAN NOT NULL DEFAULT true).
+	 */
+	@Column(name = "is_publica", nullable = false)
+	private Boolean isPublica = true;
+
+	// O campo 'resposta' e 'dataPergunta' foram removidos para aderir ao modelo de
+	// threading.
 }

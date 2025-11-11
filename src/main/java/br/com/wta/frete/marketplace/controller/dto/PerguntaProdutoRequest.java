@@ -2,34 +2,39 @@ package br.com.wta.frete.marketplace.controller.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
- * DTO de Requisição para recebimento de dados de uma Pergunta (criação) ou de
- * uma Resposta (atualização) para um produto no marketplace.
+ * DTO de Requisição para criação de uma Pergunta ou Resposta para um produto.
+ * * ATUALIZAÇÃO:
+ * - Campo 'resposta' removido.
+ * - 'textoPergunta' renomeado para 'textoConteudo' e 'perguntaPaiId' adicionado
+ * para respostas.
  */
 public record PerguntaProdutoRequest(
 		/**
-		 * ID do Produto ao qual a pergunta se refere. Obrigatório.
+		 * ID do Produto ao qual a pergunta/resposta se refere. Obrigatório.
 		 */
 		@NotNull(message = "O ID do produto é obrigatório.") Integer produtoId,
 
 		/**
-		 * ID do Autor da pergunta. Opcional no Request, pode ser resolvido pelo token
-		 * de autenticação.
+		 * ID do Autor. Opcional no Request, deve ser resolvido pelo token/serviço.
 		 */
 		Long autorId,
 
 		/**
-		 * Conteúdo da Pergunta (Texto). Obrigatório ao criar.
+		 * Conteúdo da Pergunta ou Resposta (texto_conteudo). Obrigatório.
 		 */
-		@NotBlank(message = "O texto da pergunta é obrigatório.") String textoPergunta,
+		@NotBlank(message = "O conteúdo da pergunta/resposta é obrigatório.") @Size(max = 2000) String textoConteudo,
 
 		/**
-		 * Conteúdo da Resposta (Texto). Opcional, usado para responder uma pergunta
-		 * existente.
+		 * ID da pergunta pai (pergunta_pai_id). Necessário se for uma resposta.
+		 * NULO se for uma pergunta principal.
 		 */
-		String resposta) {
-	// NOTA: Para operações de resposta, o ID da Pergunta seria geralmente passado
-	// no Path.
-	// Para criação, este DTO é o suficiente.
+		Long perguntaPaiId,
+
+		/**
+		 * Status de visibilidade. Usado para moderação.
+		 */
+		Boolean isPublica) {
 }

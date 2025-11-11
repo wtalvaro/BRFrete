@@ -160,6 +160,54 @@ CREATE TYPE colaboradores.dia_semana_enum AS ENUM (
     'SABADO'
 );
 
+-- DROP (se existir) para garantir que a migração seja idempotente
+DROP TYPE IF EXISTS marketplace.tipo_geral_enum CASCADE;
+CREATE TYPE marketplace.tipo_geral_enum AS ENUM (
+    'RECICLAVEL',
+    'ELETRONICO',
+    'CONSTRUCAO',
+    'DOACAO',
+    'GERAL',         -- Para produtos que não se encaixam em uma categoria específica
+    'AUTOMOTIVO'     -- Exemplo de adição
+);
+
+-- DROP (se existir) para garantir que a migração seja idempotente
+DROP TYPE IF EXISTS marketplace.unidade_medida_enum CASCADE;
+CREATE TYPE marketplace.unidade_medida_enum AS ENUM (
+    -- CONTÁGEM (COUNT)
+    'UN',   -- Unidade
+    'PC',   -- Pacote/Peça
+    'DZ',   -- Dúzia
+    'CX',   -- Caixa
+    'KIT',  -- Kit
+    
+    -- MASSA/PESO (WEIGHT)
+    'KG',   -- Quilograma
+    'GR',   -- Grama
+    'TON',  -- Tonelada
+    'LB',   -- Libra
+    
+    -- COMPRIMENTO (LENGTH)
+    'M',    -- Metro
+    'CM',   -- Centímetro
+    'MM',   -- Milímetro
+    'KM',   -- Quilômetro
+    
+    -- ÁREA (AREA)
+    'M2',   -- Metro Quadrado
+    'CM2',  -- Centímetro Quadrado
+    
+    -- VOLUME (VOLUME)
+    'M3',   -- Metro Cúbico
+    'L',    -- Litro
+    'ML',   -- Mililitro
+    'GAL',  -- Galão
+    
+    -- TEMPO/SERVIÇO (TIME/SERVICE)
+    'H',    -- Hora
+    'DIA'   -- Dia
+);
+
 -- ======================================================================
 -- 3. SCHEMA CORE: Identidades e Perfis M:M (Tabelas MESTRAS)
 -- ======================================================================
@@ -523,7 +571,7 @@ ALTER TABLE colaboradores.metricas_transportador
 CREATE TABLE marketplace.categorias (
     categoria_id SERIAL PRIMARY KEY,
     nome_categoria VARCHAR(100) UNIQUE NOT NULL,
-    tipo_geral VARCHAR(20) NOT NULL
+    tipo_geral marketplace.tipo_geral_enum NOT NULL DEFAULT 'GERAL'::marketplace.tipo_geral_enum
 );
 
 CREATE TABLE marketplace.produtos (
@@ -534,7 +582,7 @@ CREATE TABLE marketplace.produtos (
     descricao TEXT,
     preco NUMERIC(10, 2) NOT NULL,
     quantidade INTEGER NOT NULL DEFAULT 1,
-    unidade_medida VARCHAR(10) DEFAULT 'UN',
+    unidade_medida marketplace.unidade_medida_enum DEFAULT 'UN'::marketplace.unidade_medida_enum,
     data_publicacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_disponivel BOOLEAN NOT NULL DEFAULT true,
     is_doacao BOOLEAN NOT NULL DEFAULT false,

@@ -1,5 +1,9 @@
 package br.com.wta.frete.marketplace.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import br.com.wta.frete.marketplace.entity.enums.TipoGeralEnum;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,8 +36,10 @@ public class Categoria {
 	private String nomeCategoria;
 
 	/**
-	 * Descrição da categoria (TEXT).
+	 * Tipo geral da categoria (ENUM no BD: marketplace.tipo_geral_enum).
 	 */
-	@Column(name = "descricao", columnDefinition = "TEXT")
-	private String descricao;
+	@Enumerated(EnumType.STRING) // Define que o valor do Enum será armazenado como String no BD
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM) // Mapeia o ENUM corretamente para o PostgreSQL
+	@Column(name = "tipo_geral", nullable = false)
+	private TipoGeralEnum tipoGeral;
 }

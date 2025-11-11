@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,8 +31,6 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class MetricaTransportadorFreteService {
-
-    private static final Logger log = LoggerFactory.getLogger(MetricaTransportadorFreteService.class);
 
     private final MetricaTransportadorFreteRepository metricaRepository;
     private final ModalidadeFreteRepository modalidadeRepository;
@@ -140,6 +136,7 @@ public class MetricaTransportadorFreteService {
         return metricaMapper.toResponse(metricaAtualizada);
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public void deletarMetrica(Long id) {
         MetricaTransportadorFrete metrica = buscarMetricaPorId(id);
@@ -155,6 +152,7 @@ public class MetricaTransportadorFreteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Métrica de Frete não encontrada com ID: " + id));
     }
 
+    @SuppressWarnings("null")
     private Transportador buscarTransportador(Long id) {
         // Assume que existe um TransportadorRepository injetado
         return transportadorRepository.findById(id)
@@ -167,6 +165,7 @@ public class MetricaTransportadorFreteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Modalidade de Frete não encontrada com ID: " + id));
     }
 
+    @SuppressWarnings("null")
     private void validarTransportadorExiste(Long transportadorId) {
         if (!transportadorRepository.existsById(transportadorId)) {
             throw new ResourceNotFoundException("Transportador não encontrado com ID: " + transportadorId);
