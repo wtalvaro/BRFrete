@@ -66,12 +66,12 @@ O projeto é modularizado de acordo com os schemas de base de dados, garantindo 
     # 2. CONFIGURAÇÃO DO BANCO DE DADOS (PostgreSQL)
     # =======================================================
     # DB de Desenvolvimento
-    spring.datasource.url=jdbc:postgresql://localhost:5432/dev
+    spring.datasource.url=jdbc:postgresql://localhost:[POSTGRESQL_PORT]/dev
     spring.datasource.username=[YOUR_DB_USERNAME]
     spring.datasource.password=[YOUR_DB_PASSWORD]
     
     # Configuração para o Flyway/Testes de Integração
-    spring.test.datasource.url=jdbc:postgresql://localhost:5432/test
+    spring.test.datasource.url=jdbc:postgresql://localhost:[POSTGRESQL_PORT]/test
     spring.test.datasource.username=[YOUR_DB_USERNAME]
     spring.test.datasource.password=[YOUR_DB_PASSWORD]
 
@@ -84,7 +84,7 @@ O projeto é modularizado de acordo com os schemas de base de dados, garantindo 
     # =======================================================
     spring.mail.host=smtp.gmail.com
     spring.mail.port=587
-    spring.mail.username=wagneralvaro80@gmail.com
+    spring.mail.username=[YOUR_GOOGLE_CLIENT_EMAIL]
     spring.mail.password=[YOUR_GENERATED_APP_PASSWORD] 
     spring.mail.properties.mail.smtp.from=noreply@brfrete.com
     
