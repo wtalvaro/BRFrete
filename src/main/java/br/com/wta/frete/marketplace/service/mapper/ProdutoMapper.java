@@ -23,7 +23,7 @@ public interface ProdutoMapper {
 	// 1. Mapeamento de CRIAÇÃO (Request para Entity)
 	// =================================================================
 	@Mapping(target = "id", ignore = true)
-	@Mapping(target = "lojista", ignore = true) // Setado no Serviço (FK)
+	@Mapping(target = "vendedor", ignore = true) // Setado no Serviço (FK)
 	@Mapping(target = "categoria", ignore = true) // Setado no Serviço (FK)
 	@Mapping(target = "dataPublicacao", ignore = true) // Setado automaticamente
 	@Mapping(target = "isDisponivel", source = "isDisponivel") // Mapeamento explícito para booleans
@@ -34,13 +34,12 @@ public interface ProdutoMapper {
 	// =================================================================
 	// 2. Mapeamento de RESPOSTA (Entity para Response DTO)
 	// =================================================================
-	@Mapping(source = "lojista.pessoaId", target = "lojistaPessoaId")
+	@Mapping(source = "vendedor.pessoaId", target = "lojistaPessoaId")
 	@Mapping(source = "categoria.id", target = "categoriaId")
 	@Mapping(source = "id", target = "produtoId")
 	// Mapeamentos para Response:
 	@Mapping(source = "titulo", target = "titulo")
 	@Mapping(source = "dataPublicacao", target = "dataPublicacao")
-	@Mapping(source = "quantidade", target = "quantidade")
 	@Mapping(source = "unidadeMedida", target = "unidadeMedida") // MapStruct converte Enum para String
 	@Mapping(source = "isDoacao", target = "isDoacao")
 	@Mapping(source = "isDisponivel", target = "isDisponivel")
@@ -58,7 +57,7 @@ public interface ProdutoMapper {
 	 *                com @MappingTarget).
 	 */
 	@Mapping(target = "id", ignore = true) // Nunca altera o ID
-	@Mapping(target = "lojista", ignore = true) // Nunca altera a FK do Lojista (vendedor)
+	@Mapping(target = "vendedor", ignore = true) // Nunca altera a FK do Lojista (vendedor)
 	@Mapping(target = "categoria", ignore = true) // Nunca altera a FK da Categoria
 	@Mapping(target = "dataPublicacao", ignore = true) // Não altera a data de criação
 	@Mapping(target = "isDisponivel", source = "isDisponivel")

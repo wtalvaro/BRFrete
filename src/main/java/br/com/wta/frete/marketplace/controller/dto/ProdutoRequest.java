@@ -1,25 +1,27 @@
 package br.com.wta.frete.marketplace.controller.dto;
 
 import java.math.BigDecimal;
+
+import br.com.wta.frete.marketplace.entity.enums.UnidadeMedidaEnum; // Assumindo este ENUM existe
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min; // Novo import
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 
 /**
  * DTO de Requisição para criar ou atualizar um Produto (marketplace.produtos).
- * * ATUALIZAÇÃO: Alinhamento com a entidade 'Produto' (titulo, quantidade,
- * unidadeMedida, isDisponivel, isDoacao).
+ * Inclui campos de Estoque (quantidade, pontoReposicao, localizacao) para
+ * inicialização do EstoqueProduto.
  */
 public record ProdutoRequest(
 		// FK para o Lojista
-		@NotNull(message = "O ID do Lojista (vendedor) é obrigatório") Long lojistaPessoaId,
+		@NotNull(message = "O ID do Lojista (vendedor) é obrigatório") Long lojistaPessoaId, // Nome Corrigido
 
 		// FK para a Categoria
 		@NotNull(message = "O ID da Categoria é obrigatório") Integer categoriaId,
 
-		@NotBlank(message = "O título do produto é obrigatório") @Size(max = 255) String titulo, // Renomeado
+		@NotBlank(message = "O título do produto é obrigatório") @Size(max = 255) String titulo,
 
 		// Descrição é opcional
 		String descricao,
@@ -28,19 +30,21 @@ public record ProdutoRequest(
 
 		@NotNull(message = "O preço é obrigatório") @DecimalMin(value = "0.00", inclusive = true, message = "O preço não pode ser negativo") BigDecimal preco,
 
-		@NotNull(message = "A quantidade é obrigatória") @Min(value = 1, message = "A quantidade deve ser de pelo menos 1") Integer quantidade, // Novo
-																																				// campo
+		@NotNull(message = "A unidade de medida é obrigatória") UnidadeMedidaEnum unidadeMedida, // Usando o ENUM
 
-		@NotBlank(message = "A unidade de medida é obrigatória") @Size(max = 10) String unidadeMedida, // Novo campo
+		@NotNull(message = "O status de doação é obrigatório") Boolean isDoacao,
 
-		@NotNull(message = "O status de doação é obrigatório") Boolean isDoacao, // Novo campo
+		@NotNull(message = "O status de disponibilidade é obrigatório") Boolean isDisponivel,
 
-		@NotNull(message = "O status de disponibilidade é obrigatório") Boolean isDisponivel, // Novo campo
+		// =========================================================================
+		// CAMPOS DE ESTOQUE (NECESSÁRIOS PARA O ProdutoService)
+		// =========================================================================
 
-		// O campo pesoKg foi removido pois não existe no SQL.
+		@NotNull(message = "A quantidade inicial em estoque é obrigatória") @Min(value = 0, message = "A quantidade não pode ser negativa") Integer quantidade,
 
-		// Status de disponibilidade anterior foi substituído por isDisponivel (boolean)
-		String statusDisponibilidade // Mantido o campo statusDisponibilidade original, mas o ideal seria usar
-										// isDisponivel para aderir ao SQL
+		@Min(value = 0, message = "O ponto de reposição não pode ser negativo") Integer pontoReposicao,
+
+		@Size(max = 100) String localizacao
+
 ) {
 }

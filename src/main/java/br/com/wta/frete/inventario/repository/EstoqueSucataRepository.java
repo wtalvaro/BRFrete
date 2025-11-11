@@ -4,22 +4,26 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import br.com.wta.frete.inventario.entity.EstoqueSucata;
-
+import br.com.wta.frete.inventario.entity.enums.TipoMaterialEnum;
+import java.util.Optional;
 import java.util.List;
 
 /**
  * Repositório para a entidade EstoqueSucata (inventario.estoque).
+ * Chave primária: estoque_id (Long).
  */
 @Repository
 public interface EstoqueSucataRepository extends JpaRepository<EstoqueSucata, Long> {
 
 	/**
-	 * Busca todo o estoque pertencente a um Sucateiro.
+	 * Busca um item de estoque pelo ID do Sucateiro e o Tipo de Material.
+	 * Útil para garantir a unicidade e para a lógica de 'criar ou atualizar'.
 	 */
-	List<EstoqueSucata> findBySucateiroPessoaId(Long sucateiroPessoaId);
+	Optional<EstoqueSucata> findBySucateiroPessoaIdAndTipoMaterial(Long sucateiroPessoaId,
+			TipoMaterialEnum tipoMaterial);
 
 	/**
-	 * Busca estoque por material, ignorando maiúsculas/minúsculas.
+	 * Busca todos os itens de estoque de um Sucateiro específico.
 	 */
-	List<EstoqueSucata> findByNomeMaterialContainingIgnoreCase(String nomeMaterial);
+	List<EstoqueSucata> findBySucateiroPessoaId(Long sucateiroPessoaId);
 }

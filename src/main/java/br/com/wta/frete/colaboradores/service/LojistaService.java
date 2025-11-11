@@ -10,43 +10,31 @@ import br.com.wta.frete.colaboradores.controller.dto.LojistaResponse;
 import br.com.wta.frete.colaboradores.entity.Lojista;
 import br.com.wta.frete.colaboradores.repository.LojistaRepository;
 import br.com.wta.frete.colaboradores.service.mapper.LojistaMapper;
-import br.com.wta.frete.core.entity.Perfil;
+// Removidas as importações de Perfil, PessoaPerfil, PessoaPerfilId, PessoaRepository, PerfilRepository e PessoaPerfilRepository
 import br.com.wta.frete.core.entity.Pessoa;
-import br.com.wta.frete.core.entity.PessoaPerfil;
-import br.com.wta.frete.core.entity.PessoaPerfilId;
-import br.com.wta.frete.core.repository.PerfilRepository;
-import br.com.wta.frete.core.repository.PessoaPerfilRepository;
-import br.com.wta.frete.core.repository.PessoaRepository;
-import br.com.wta.frete.shared.exception.ResourceNotFoundException;
 
 /**
  * Service dedicado à lógica de cadastro, obtenção e gerenciamento do perfil
  * Lojista.
- * Garante que a entidade Lojista seja criada e que o perfil de acesso seja
- * associado à Pessoa.
+ * O gerenciamento do perfil e da Pessoa agora é delegado ao PerfilServiceComum.
  */
 @Service
 public class LojistaService {
 
     private final LojistaRepository lojistaRepository;
     private final LojistaMapper lojistaMapper;
-    private final PessoaRepository pessoaRepository;
-    private final PerfilRepository perfilRepository;
-    private final PessoaPerfilRepository pessoaPerfilRepository;
+    private final PerfilAssociacaoService perfilServiceComum; // NOVO: Injeção do Service Comum
 
+    // Construtor ATUALIZADO
     public LojistaService(LojistaRepository lojistaRepository, LojistaMapper lojistaMapper,
-            PessoaRepository pessoaRepository, PerfilRepository perfilRepository,
-            PessoaPerfilRepository pessoaPerfilRepository) {
+            PerfilAssociacaoService perfilServiceComum) { // Apenas dependências essenciais
         this.lojistaRepository = lojistaRepository;
         this.lojistaMapper = lojistaMapper;
-        this.pessoaRepository = pessoaRepository;
-        this.perfilRepository = perfilRepository;
-        this.pessoaPerfilRepository = pessoaPerfilRepository;
+        this.perfilServiceComum = perfilServiceComum;
     }
 
     /**
-     * Documentação: Adiciona ou atualiza o perfil 'LOJISTA' a uma Pessoa existente.
-     * Implementa idempotência por meio do fluxo explícito de criação/atualização.
+     * Adiciona ou atualiza o perfil 'LOJISTA' a uma Pessoa existente.
      *
      * @param request O DTO com o ID da pessoa e os dados do Lojista.
      * @return O DTO de resposta do Lojista.
@@ -56,52 +44,29 @@ public class LojistaService {
     public LojistaResponse adicionarPerfilLojista(LojistaRequest request) {
         Long pessoaId = request.pessoaId();
 
-        // 1. Valida se a Pessoa existe
-        Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa com ID " + pessoaId + " não encontrada."));
+        // 1. UTILIZA O SERVIÇO COMUM (Substitui os passos 1, 2, 4 e 5 originais)
+        // Valida Pessoa, busca Perfil 'LOJISTA' e faz a associação/atualização do
+        // isColaborador.
+        Pessoa pessoa = perfilServiceComum.associarPerfilColaborador(pessoaId, "LOJISTA");
 
-        // 2. Obtém a Entidade Perfil 'LOJISTA'
-        Perfil perfilLojista = perfilRepository.findByNomePerfil("LOJISTA")
-                .orElseThrow(() -> new IllegalStateException(
-                        "Perfil 'LOJISTA' não encontrado. Verifique a inicialização de dados."));
-
-        // 3. Cria OU Atualiza a Entidade Lojista (Fluxo Idempotente)
+        // 2. Cria OU Atualiza a Entidade Lojista (Lógica Específica)
         Optional<Lojista> lojistaExistente = lojistaRepository.findByPessoaId(pessoaId);
 
         Lojista lojista;
 
         if (lojistaExistente.isPresent()) {
-            // Caminho de ATUALIZAÇÃO: Se já existe, atualiza e salva.
+            // Caminho de ATUALIZAÇÃO
             lojista = lojistaExistente.get();
-            // Uso do mapper com @MappingTarget para atualizar o objeto gerenciado
             lojistaMapper.updateEntityFromRequest(request, lojista);
-            // Salva explicitamente o lojista ATUALIZADO
             lojista = lojistaRepository.save(lojista);
         } else {
-            // Caminho de CRIAÇÃO: Se não existe, cria, associa a Pessoa e salva.
+            // Caminho de CRIAÇÃO
             Lojista novoLojista = lojistaMapper.toEntity(request);
             novoLojista.setPessoa(pessoa);
-            // Salva explicitamente o novo lojista
             lojista = lojistaRepository.save(novoLojista);
         }
 
-        // 4. Adiciona/Atualiza o Perfil de Lojista à Pessoa (Lógica de M:M)
-        PessoaPerfilId pessoaPerfilId = new PessoaPerfilId(pessoaId, perfilLojista.getId());
-
-        // Verifica se a associação já existe antes de tentar criá-la (Idempotência)
-        if (pessoaPerfilRepository.findById(pessoaPerfilId).isEmpty()) {
-            PessoaPerfil novaPessoaPerfil = new PessoaPerfil(pessoa, perfilLojista);
-            pessoaPerfilRepository.save(novaPessoaPerfil);
-        }
-
-        // 5. Atualiza o flag isColaborador na Pessoa (se já não for colaborador)
-        // Isso deve ser feito APENAS se houver uma mudança de estado
-        if (!pessoa.isColaborador()) {
-            pessoa.setColaborador(true);
-            pessoaRepository.save(pessoa);
-        }
-
-        // 6. Mapeia e retorna a resposta
+        // 3. Mapeia e retorna a resposta
         return lojistaMapper.toResponse(lojista);
     }
 }

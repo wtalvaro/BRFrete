@@ -58,7 +58,7 @@ public class Produto {
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "vendedor_id", nullable = false)
-	private Lojista lojista;
+	private Lojista vendedor;
 
 	/**
 	 * Categoria do produto (categoria_id INTEGER NOT NULL). Relacionamento
@@ -94,12 +94,6 @@ public class Produto {
 	 */
 	@Column(name = "preco", nullable = false, precision = 10, scale = 2)
 	private BigDecimal preco;
-
-	/**
-	 * Quantidade de itens disponíveis (INTEGER NOT NULL DEFAULT 1).
-	 */
-	@Column(name = "quantidade", nullable = false)
-	private Integer quantidade; // Novo campo
 
 	/**
 	 * Unidade de medida (ENUM marketplace.unidade_medida_enum).

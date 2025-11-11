@@ -22,7 +22,6 @@ public final class ProdutoResponse {
 	private final String descricao;
 	private final String sku;
 	private final BigDecimal preco;
-	private final Integer quantidade; // Novo campo
 	private final String unidadeMedida; // Novo campo
 	private final Boolean isDoacao; // Novo campo
 	private final Boolean isDisponivel; // Novo campo
@@ -42,7 +41,6 @@ public final class ProdutoResponse {
 		this.descricao = descricao;
 		this.sku = sku;
 		this.preco = preco;
-		this.quantidade = quantidade;
 		this.unidadeMedida = unidadeMedida;
 		this.isDoacao = isDoacao;
 		this.isDisponivel = isDisponivel;
@@ -80,10 +78,6 @@ public final class ProdutoResponse {
 		return preco;
 	}
 
-	public Integer getQuantidade() { // Novo Getter
-		return quantidade;
-	}
-
 	public String getUnidadeMedida() { // Novo Getter
 		return unidadeMedida;
 	}
@@ -116,7 +110,6 @@ public final class ProdutoResponse {
 		return Objects.equals(produtoId, that.produtoId) && Objects.equals(lojistaPessoaId, that.lojistaPessoaId)
 				&& Objects.equals(categoriaId, that.categoriaId) && Objects.equals(titulo, that.titulo)
 				&& Objects.equals(descricao, that.descricao) && Objects.equals(sku, that.sku)
-				&& Objects.equals(preco, that.preco) && Objects.equals(quantidade, that.quantidade)
 				&& Objects.equals(unidadeMedida, that.unidadeMedida) && Objects.equals(isDoacao, that.isDoacao)
 				&& Objects.equals(isDisponivel, that.isDisponivel)
 				&& Objects.equals(statusDisponibilidade, that.statusDisponibilidade)
@@ -125,7 +118,7 @@ public final class ProdutoResponse {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(produtoId, lojistaPessoaId, categoriaId, titulo, descricao, sku, preco, quantidade,
+		return Objects.hash(produtoId, lojistaPessoaId, categoriaId, titulo, descricao, sku, preco,
 				unidadeMedida, isDoacao, isDisponivel, statusDisponibilidade, dataPublicacao);
 	}
 
@@ -133,7 +126,7 @@ public final class ProdutoResponse {
 	public String toString() {
 		return "ProdutoResponse{" + "produtoId=" + produtoId + ", lojistaPessoaId=" + lojistaPessoaId + ", categoriaId="
 				+ categoriaId + ", titulo='" + titulo + '\'' + ", descricao='" + descricao + '\'' + ", sku='" + sku
-				+ '\'' + ", preco=" + preco + ", quantidade=" + quantidade + ", unidadeMedida='" + unidadeMedida
+				+ '\'' + ", preco=" + preco + ", unidadeMedida='" + unidadeMedida
 				+ '\'' + ", isDoacao=" + isDoacao + ", isDisponivel=" + isDisponivel + ", statusDisponibilidade='"
 				+ statusDisponibilidade + '\'' + ", dataPublicacao=" + dataPublicacao + '}';
 	}

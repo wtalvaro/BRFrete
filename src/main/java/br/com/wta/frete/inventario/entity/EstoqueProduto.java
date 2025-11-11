@@ -16,9 +16,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Mapeia a tabela 'inventario.estoque_produto'. Representa o estoque em tempo
- * real de um Produto específico do marketplace. Relacionamento 1:1 com Produto
- * via chave compartilhada (@MapsId).
+ * Mapeia a tabela 'inventario.estoque_produto' (chave derivada via @MapsId).
+ * O campo 'quantidade' é a única fonte de verdade para o saldo em estoque,
+ * em alinhamento com a remoção da coluna redundante em marketplace.produtos.
  */
 @Entity
 @Table(name = "estoque_produto", schema = "inventario")
@@ -62,8 +62,7 @@ public class EstoqueProduto {
 	private String localizacao;
 
 	/**
-	 * Data da última movimentação/atualização (TIMESTAMP WITH TIME ZONE DEFAULT
-	 * CURRENT_TIMESTAMP).
+	 * Data da última movimentação/atualização (TIMESTAMP WITH TIME ZONE).
 	 */
 	@Column(name = "ultima_atualizacao", columnDefinition = "TIMESTAMP WITH TIME ZONE")
 	private ZonedDateTime ultimaAtualizacao = ZonedDateTime.now();

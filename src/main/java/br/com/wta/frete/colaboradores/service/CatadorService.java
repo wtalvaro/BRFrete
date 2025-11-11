@@ -1,73 +1,52 @@
 package br.com.wta.frete.colaboradores.service;
 
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import br.com.wta.frete.colaboradores.controller.dto.CatadorResponse;
 import br.com.wta.frete.colaboradores.entity.Catador;
 import br.com.wta.frete.colaboradores.repository.CatadorRepository;
 import br.com.wta.frete.colaboradores.service.mapper.CatadorMapper;
 import br.com.wta.frete.core.entity.Pessoa;
-import br.com.wta.frete.core.entity.Perfil;
-import br.com.wta.frete.core.entity.PessoaPerfil;
-import br.com.wta.frete.core.entity.PessoaPerfilId;
-import br.com.wta.frete.core.repository.PessoaRepository;
-import br.com.wta.frete.core.repository.PerfilRepository;
-import br.com.wta.frete.core.repository.PessoaPerfilRepository;
-import br.com.wta.frete.shared.exception.ResourceNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 /**
  * Service dedicado à lógica de cadastro, obtenção e gerenciamento do perfil
  * Catador.
- * Garante que a entidade Catador seja criada e que o perfil de acesso seja
- * associado à Pessoa.
+ * O gerenciamento do perfil e da Pessoa agora é delegado ao PerfilServiceComum.
  */
 @Service
 public class CatadorService {
 
     private final CatadorRepository catadorRepository;
     private final CatadorMapper catadorMapper;
-    private final PessoaRepository pessoaRepository;
-    private final PerfilRepository perfilRepository;
-    private final PessoaPerfilRepository pessoaPerfilRepository;
+    private final PerfilAssociacaoService perfilServiceComum; // NOVO: Injeção do Service Comum
 
-    // Injeção de Dependências
+    // Construtor ATUALIZADO
     public CatadorService(CatadorRepository catadorRepository,
             CatadorMapper catadorMapper,
-            PessoaRepository pessoaRepository,
-            PerfilRepository perfilRepository,
-            PessoaPerfilRepository pessoaPerfilRepository) {
+            PerfilAssociacaoService perfilServiceComum) { // Apenas dependências essenciais
         this.catadorRepository = catadorRepository;
         this.catadorMapper = catadorMapper;
-        this.pessoaRepository = pessoaRepository;
-        this.perfilRepository = perfilRepository;
-        this.pessoaPerfilRepository = pessoaPerfilRepository;
+        this.perfilServiceComum = perfilServiceComum;
     }
 
     /**
      * Adiciona o perfil de Catador a uma Pessoa existente.
-     * Cria a entidade Catador (se não existir) e associa o perfil 'CATADOR' à
-     * Pessoa.
+     * Usa o Service Comum para gerenciar a associação de perfil e o flag
+     * isColaborador.
      *
      * @param pessoaId O ID da Pessoa que receberá o perfil.
      * @return O DTO de resposta do Catador.
      */
-    @SuppressWarnings("null")
     @Transactional
     public CatadorResponse adicionarPerfilCatador(Long pessoaId) {
 
-        // 1. Busca a Pessoa
-        Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada com ID: " + pessoaId));
+        // 1. UTILIZA O SERVIÇO COMUM (Substitui os passos 1, 2, 4 e 5 originais)
+        Pessoa pessoa = perfilServiceComum.associarPerfilColaborador(pessoaId, "CATADOR");
 
-        // 2. Busca o Perfil 'CATADOR'
-        // Assume que este perfil foi inserido via script V1__Initial_Schema.sql
-        Perfil perfilCatador = perfilRepository.findByNomePerfil("CATADOR")
-                .orElseThrow(() -> new IllegalStateException(
-                        "Perfil 'CATADOR' não encontrado. Verifique a inicialização de dados."));
-
-        // 3. Cria ou Obtém a Entidade Catador
+        // 2. Cria ou Obtém a Entidade Catador (Lógica Específica)
         Optional<Catador> catadorExistente = catadorRepository.findByPessoaId(pessoaId);
 
         // Se não existir, cria e salva a nova entidade Catador, linkando-a à Pessoa.
@@ -78,24 +57,7 @@ public class CatadorService {
             return catadorRepository.save(novoCatador);
         });
 
-        // 4. Adiciona/Atualiza o Perfil de Catador à Pessoa
-        PessoaPerfilId pessoaPerfilId = new PessoaPerfilId(pessoaId, perfilCatador.getId()); // Cria chave composta
-
-        // Tentamos carregar a associação existente ou criamos uma nova
-        Optional<PessoaPerfil> associacaoExistente = pessoaPerfilRepository.findById(pessoaPerfilId);
-
-        if (associacaoExistente.isEmpty()) {
-            PessoaPerfil novaPessoaPerfil = new PessoaPerfil(pessoa, perfilCatador);
-            pessoaPerfilRepository.save(novaPessoaPerfil);
-        }
-
-        // 5. Atualiza o flag isColaborador na Pessoa
-        if (!pessoa.isColaborador()) {
-            pessoa.setColaborador(true);
-            pessoaRepository.save(pessoa);
-        }
-
-        // 6. Mapeia e retorna a resposta
+        // 3. Mapeia e retorna a resposta
         return catadorMapper.toResponse(catador);
     }
 }

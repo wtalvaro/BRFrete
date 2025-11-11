@@ -208,6 +208,21 @@ CREATE TYPE marketplace.unidade_medida_enum AS ENUM (
     'DIA'   -- Dia
 );
 
+-- DROP (se existir) para garantir que a migração seja idempotente
+DROP TYPE IF EXISTS inventario.tipo_material_enum CASCADE;
+CREATE TYPE inventario.tipo_material_enum AS ENUM (
+    'ALUMINIO',
+    'COBRE',
+    'FERRO',
+    'ACO',
+    'PLASTICO_PET',
+    'PAPELAO',
+    'VIDRO',
+    'MADEIRA',
+    'BORRACHA',
+    'OUTROS'
+);
+
 -- ======================================================================
 -- 3. SCHEMA CORE: Identidades e Perfis M:M (Tabelas MESTRAS)
 -- ======================================================================
@@ -581,12 +596,13 @@ CREATE TABLE marketplace.produtos (
     titulo VARCHAR(255) NOT NULL,
     descricao TEXT,
     preco NUMERIC(10, 2) NOT NULL,
-    quantidade INTEGER NOT NULL DEFAULT 1,
+    -- REMOVIDO: quantidade INTEGER NOT NULL DEFAULT 1 (O estoque é agora gerenciado exclusivamente em inventario.estoque_produto)
     unidade_medida marketplace.unidade_medida_enum DEFAULT 'UN'::marketplace.unidade_medida_enum,
     data_publicacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_disponivel BOOLEAN NOT NULL DEFAULT true,
     is_doacao BOOLEAN NOT NULL DEFAULT false,
-    FOREIGN KEY (vendedor_id) REFERENCES core.pessoas(pessoa_id) ON DELETE RESTRICT,
+    -- MELHORIA: A FK aponta agora diretamente para LOJISTAS, garantindo a regra de negócio
+    FOREIGN KEY (vendedor_id) REFERENCES colaboradores.lojistas(pessoa_id) ON DELETE RESTRICT, 
     FOREIGN KEY (categoria_id) REFERENCES marketplace.categorias(categoria_id) ON DELETE RESTRICT,
     CONSTRAINT check_preco_doacao
         CHECK (
@@ -621,29 +637,48 @@ CREATE INDEX idx_perguntas_produto_id ON marketplace.perguntas_produto (produto_
 -- 8. SCHEMA INVENTARIO (Com Modelo Otimizado)
 -- ======================================================================
 
--- Tabela original: Estoque de Materiais/Sucata a Granel (para Sucateiros)
+-- 1. Tabela: Estoque de Materiais/Sucata a Granel (para Sucateiros)
+-- CORREÇÕES: Renomeada FK, Apontando para colaboradores.sucateiros e Adicionada Unicidade.
 CREATE TABLE inventario.estoque (
     estoque_id BIGSERIAL PRIMARY KEY,
-    gestor_id BIGINT NOT NULL,
-    tipo_material VARCHAR(50) NOT NULL,
+    sucateiro_pessoa_id BIGINT NOT NULL, -- Renomeado (antes era gestor_id)
+    tipo_material inventario.tipo_material_enum NOT NULL,
     quantidade_kg NUMERIC(10, 2) NOT NULL,
     data_entrada TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
     localizacao TEXT,
-    FOREIGN KEY (gestor_id) REFERENCES core.pessoas(pessoa_id) ON DELETE RESTRICT
+    
+    -- FK que garante que a pessoa é um Sucateiro (Mais estrito que core.pessoas)
+    FOREIGN KEY (sucateiro_pessoa_id) 
+        REFERENCES colaboradores.sucateiros(pessoa_id) 
+        ON DELETE RESTRICT,
+
+    -- Restrição de Unicidade: Um Sucateiro só pode ter uma entrada para cada tipo de material
+    UNIQUE (sucateiro_pessoa_id, tipo_material),
+
+    CONSTRAINT check_quantidade_kg_positiva
+        CHECK (quantidade_kg >= 0)
 );
 
--- Tabela NOVO: Estoque para Produtos do Marketplace
--- Gerencia o saldo de itens que estão ativamente anunciados no 'marketplace.produtos'.
+
+-- 2. Tabela: Estoque para Produtos do Marketplace (Usa Chave Derivada/Compartilhada @MapsId)
+-- CORREÇÕES:
+-- - produto_id é agora a PRIMARY KEY (Chave Derivada/Compartilhada).
+-- - estoque_produto_id e quantidade_disponivel foram removidos.
+-- - Campos do EstoqueProduto.java (ponto_reposicao, localizacao, ultima_atualizacao) foram adicionados.
 CREATE TABLE inventario.estoque_produto (
-    estoque_produto_id BIGSERIAL PRIMARY KEY,
-    produto_id INTEGER UNIQUE NOT NULL,
-    quantidade_disponivel INTEGER NOT NULL,
-    data_ultima_entrada TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+    produto_id INTEGER PRIMARY KEY, -- Agora é a chave primária (PK) e chave estrangeira (FK)
+    quantidade INTEGER NOT NULL,    -- Simplificado (era quantidade_disponivel)
+    ponto_reposicao INTEGER,        -- Adicionado da Entity Java
+    localizacao VARCHAR(100),       -- Adicionado da Entity Java
+    ultima_atualizacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, -- Data de Atualização
+    
+    -- Chave Estrangeira Referenciando o Produto
     FOREIGN KEY (produto_id)
         REFERENCES marketplace.produtos(produto_id)
-        ON DELETE CASCADE,
+        ON DELETE CASCADE, -- Se o Produto for excluído, o estoque também é
+        
     CONSTRAINT check_quantidade_positiva
-        CHECK (quantidade_disponivel >= 0)
+        CHECK (quantidade >= 0)
 );
 
 

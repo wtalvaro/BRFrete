@@ -4,7 +4,6 @@ import java.time.ZonedDateTime;
 
 /**
  * DTO de Resposta para a entidade EstoqueProduto (inventario.estoque_produto).
- * Retorna os detalhes de um item no estoque de produtos.
  */
 public record EstoqueProdutoResponse(
 		// Chave primária/estrangeira do Produto (ID do Produto)
