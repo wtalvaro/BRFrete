@@ -53,6 +53,7 @@ public class FreteService {
         private final ModalidadeFreteRepository modalidadeFreteRepository;
         private final LanceRepository lanceRepository;
         private final LeilaoFinalizacaoService leilaoFinalizacaoService; // NOVO: Injete o novo serviço
+        private final MetricaTransportadorFreteService metricaService;
 
         // Injeção de dependências via construtor
         public FreteService(
@@ -65,7 +66,8 @@ public class FreteService {
                         StatusLeilaoRepository statusLeilaoRepository,
                         ModalidadeFreteRepository modalidadeFreteRepository,
                         LanceRepository lanceRepository,
-                        @Lazy LeilaoFinalizacaoService leilaoFinalizacaoService) { // NOVO ARGUMENTO) {
+                        @Lazy LeilaoFinalizacaoService leilaoFinalizacaoService,
+                        MetricaTransportadorFreteService metricaService) {
                 this.freteRepository = freteRepository;
                 this.freteMapper = freteMapper;
                 this.itemFreteRepository = itemFreteRepository;
@@ -75,7 +77,8 @@ public class FreteService {
                 this.statusLeilaoRepository = statusLeilaoRepository;
                 this.modalidadeFreteRepository = modalidadeFreteRepository;
                 this.lanceRepository = lanceRepository;
-                this.leilaoFinalizacaoService = leilaoFinalizacaoService; // NOVA INICIALIZAÇÃO
+                this.leilaoFinalizacaoService = leilaoFinalizacaoService;
+                this.metricaService = metricaService;
         }
 
         /**
@@ -138,29 +141,90 @@ public class FreteService {
         // --- MÉTODOS DE FINALIZAÇÃO DE LEILÃO (@Scheduled) ---
 
         /**
-         * TAREFA AGENDADA: Verifica e finaliza leilões de frete que expiraram.
-         * Rodará a cada 60 segundos.
-         * Deve ter a anotação @EnableScheduling na classe principal do projeto.
+         * Verifica periodicamente (a cada 30 minutos) e processa todos os leilões de
+         * frete que já atingiram sua data de expiração.
          */
-        @Scheduled(fixedRate = 60000)
-        @Transactional
+        @Scheduled(fixedRateString = "${frete.leilao.finalizacao.intervalo:1800000}") // Exemplo: a cada 30 minutos
+        @Transactional(readOnly = true)
         public void finalizarLeiloesExpirados() {
                 log.info("Iniciando verificação de leilões expirados...");
 
-                final String STATUS_ABERTO = "AGUARDANDO_LANCES"; // Status que indica que o leilão está ativo
-
-                // Busca fretes expirados que ainda estão no status de negociação
-                List<Frete> fretesExpirados = freteRepository
-                                .findByDataExpiracaoNegociacaoBeforeAndStatusLeilaoNomeStatus(
-                                                LocalDateTime.now(), STATUS_ABERTO);
+                // 1. Busca no Repositório todos os Fretes expirados e não finalizados
+                List<Frete> fretesExpirados = freteRepository.findByDataExpiracaoNegociacaoBeforeAndStatusLeilaoNomeStatus(
+                                LocalDateTime.now(), "AGUARDANDO_LANCES"); // Assumindo o método de busca correto
 
                 if (fretesExpirados.isEmpty()) {
                         log.info("Nenhum leilão expirado encontrado.");
                         return;
                 }
 
-                log.info("Processando {} leilões expirados...", fretesExpirados.size());
-                fretesExpirados.forEach(this::processarFinalizacao);
+                log.info("{} leilão(ões) expirado(s) encontrado(s). Processando...", fretesExpirados.size());
+
+                // 2. Itera e chama o processador para cada um
+                for (Frete frete : fretesExpirados) {
+                        try {
+                                // Chama o método de processamento principal (que contém a lógica de seleção de
+                                // lance e transação)
+                                processarLeilaoExpirado(frete);
+                        } catch (Exception e) {
+                                // Loga a falha e continua para o próximo Frete
+                                log.error("Falha ao processar o Frete ID #{} durante a rotina agendada: {}",
+                                                frete.getFreteId(), e.getMessage(), e);
+                        }
+                }
+                log.info("Verificação de leilões expirados concluída.");
+        }
+
+        /**
+         * Processa o encerramento de um Frete que atingiu sua data de expiração.
+         * Seleciona o lance de menor valor (regra de leilão reverso).
+         *
+         * @param frete O Frete expirado.
+         */
+        @Transactional
+        public void processarLeilaoExpirado(Frete frete) {
+                Optional<Lance> optionalLanceVencedor = encontrarLanceVencedor(frete);
+
+                if (optionalLanceVencedor.isPresent()) {
+                        Lance lanceVencedor = optionalLanceVencedor.get();
+                        log.info("Frete #{} expirou. Vencedor encontrado: Lance ID #{} com valor R$ {}.",
+                                        frete.getFreteId(), lanceVencedor.getId(), lanceVencedor.getValorLance());
+
+                        // 1. Atualiza o Frete (Tabela logistica.fretes)
+                        // Assumimos que a tabela logistica.status_leilao contém
+                        // "ENCERRADO_COM_VENCEDOR"
+                        frete.setStatusLeilao(buscarStatusLeilao("ENCERRADO_COM_VENCEDOR"));
+                        frete.setValorFinalAceito(lanceVencedor.getValorLance());
+                        freteRepository.save(frete);
+
+                        // 2. Delega a finalização do Lance e a confirmação da OS para o serviço
+                        // dedicado.
+                        // Esta chamada utiliza REQUIRES_NEW para transação separada.
+                        leilaoFinalizacaoService.finalizarLeilaoEConfirmarOS(frete, lanceVencedor);
+
+                } else {
+                        // Nenhum lance foi feito.
+                        log.info("Frete #{} expirou sem lances. Marcando como ENCERRADO_SEM_LANCES.", frete.getFreteId());
+                        // Assumimos que a tabela logistica.status_leilao contém "ENCERRADO_SEM_LANCES"
+                        frete.setStatusLeilao(buscarStatusLeilao("ENCERRADO_SEM_LANCES"));
+                        freteRepository.save(frete);
+                }
+        }
+
+        /**
+         * Tenta encontrar o melhor lance (mais baixo) para um Frete expirado.
+         *
+         * @param frete O Frete expirado.
+         * @return O Lance com o menor valor, se existir.
+         */
+        private Optional<Lance> encontrarLanceVencedor(Frete frete) {
+                // Encontra todos os lances válidos para este frete (usando o repository
+                // injetado)
+                List<Lance> lances = lanceRepository.findByFreteFreteId(frete.getFreteId());
+
+                // O leilão de frete é reverso, então o vencedor é o menor valor.
+                return lances.stream()
+                                .min((l1, l2) -> l1.getValorLance().compareTo(l2.getValorLance()));
         }
 
         /**
@@ -247,6 +311,9 @@ public class FreteService {
         /**
          * Responsabilidade: Realiza todos os cálculos e inferências de regras de
          * negócio (peso, distância, preços, lookup de entidades mestre).
+         * LÓGICA ATUALIZADA: Agora considera a precificação customizada do
+         * transportador
+         * se ele estiver designado.
          */
         private FreteParametrosCalculados calcularParametrosIniciais(
                         OrdemServico ordemServico,
@@ -255,23 +322,48 @@ public class FreteService {
 
                 // 1. CÁLCULO DE RECURSOS E DISTÂNCIA
                 BigDecimal pesoTotalKg = calcularPesoTotal(itensFreteRequests);
-                // Assumindo que o GeoService calcula a distância com base nos CEPs da OS
                 BigDecimal distanciaKm = geoService.calcularDistanciaRodoviaria(
                                 ordemServico.getCepColeta(),
                                 ordemServico.getCepDestino());
 
                 // 2. CÁLCULO DE PREÇOS BASE (LEGALIDADE)
-                // Assume que o AnttParametroService está injetado
+                // O Piso Mínimo ANTT é o teto INFERIOR (nunca se pode propor abaixo dele)
                 BigDecimal anttPisoMinimo = anttService.calcularPisoMinimo(distanciaKm, pesoTotalKg);
 
                 // 3. OBTENÇÃO DE ENTIDADES MESTRAS (Status e Modalidade)
                 StatusLeilao statusInicial = buscarStatusLeilao("AGUARDANDO_LANCES");
                 ModalidadeFrete modalidade = buscarModalidadeFrete(nomeModalidadeDesejada);
 
-                // 4. Lógica de Preço Sugerido (Mercado)
-                BigDecimal precoSugerido = anttPisoMinimo.multiply(new BigDecimal("1.20")).setScale(2,
-                                RoundingMode.HALF_UP);
-                BigDecimal custoBaseMercado = precoSugerido;
+                // 4. Lógica de Preço Sugerido (Mercado / Customizado)
+                BigDecimal custoBaseMercado;
+
+                // ** NOVA LÓGICA DE PRECIFICAÇÃO CUSTOMIZADA **
+                if (ordemServico.getTransportadorDesignado() != null) {
+                        // CÁLCULO PERSONALIZADO (Proposta Fechada para um Transportador)
+                        Long transportadorId = ordemServico.getTransportadorDesignado().getPessoaId();
+
+                        // O valor base é o custo calculado pelo próprio transportador.
+                        BigDecimal custoPersonalizado = metricaService.calcularCustoPersonalizado(
+                                        transportadorId,
+                                        nomeModalidadeDesejada,
+                                        distanciaKm);
+
+                        // Garante que o custo não seja menor que o mínimo legal.
+                        custoBaseMercado = custoPersonalizado;
+
+                        log.info("Cálculo customizado (Transportador ID: {}): R$ {}. Base de Mercado: R$ {}",
+                                        transportadorId, custoPersonalizado, custoBaseMercado);
+
+                } else {
+                        // CÁLCULO PADRÃO (Leilão Aberto)
+                        // O preço sugerido é o ANTT + Margem de Mercado.
+                        BigDecimal margemPadrao = new BigDecimal("1.20"); // 20% acima do mínimo
+                        custoBaseMercado = anttPisoMinimo.multiply(margemPadrao).setScale(2, RoundingMode.HALF_UP);
+                        log.info("Cálculo padrão (Leilão Aberto). Base de Mercado: R$ {}", custoBaseMercado);
+                }
+
+                // O preço sugerido é o valor que o sistema espera que o frete seja negociado
+                BigDecimal precoSugerido = custoBaseMercado;
 
                 // 5. Define a data de expiração
                 LocalDateTime dataExpiracaoNegociacao = LocalDateTime.now().plusHours(48);

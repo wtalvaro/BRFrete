@@ -17,6 +17,12 @@ import java.util.Optional;
 public interface LanceRepository extends JpaRepository<Lance, Long> {
 
 	/**
+	 * Busca todos os lances feitos para um Frete específico (chave primária
+	 * freteId).
+	 */
+	List<Lance> findByFreteFreteId(Long freteId);
+
+	/**
 	 * Busca todos os lances feitos para um Frete específico (usando a PK da
 	 * OrdemServico).
 	 */

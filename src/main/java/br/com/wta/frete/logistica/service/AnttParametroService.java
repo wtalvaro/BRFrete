@@ -13,11 +13,19 @@ import br.com.wta.frete.logistica.repository.AnttParametroRepository;
 import br.com.wta.frete.shared.exception.ResourceNotFoundException;
 
 /**
- * Serviço responsável por gerenciar e calcular o Piso Mínimo de Frete da ANTT.
- * Utiliza parâmetros da tabela logistica.antt_parametros.
+ * Serviço responsável por gerenciar e calcular o Piso Mínimo de Frete (PMF) da
+ * ANTT.
+ * Este valor é crucial para o preço inicial legal do Leilão/Frete.
+ * Utiliza parâmetros da tabela logistica.antt_parametros para garantir
+ * atualização
+ * dinâmica das regras regulatórias.
  */
 @Service
 public class AnttParametroService {
+
+    // Constante para arredondamento (2 casas decimais, padrão financeiro)
+    private static final int CASAS_DECIMAIS = 2;
+    private static final RoundingMode MODO_ARREDONDAMENTO = RoundingMode.HALF_UP;
 
     private final AnttParametroRepository anttRepository;
 
@@ -25,6 +33,14 @@ public class AnttParametroService {
         this.anttRepository = anttRepository;
     }
 
+    /**
+     * Busca todos os parâmetros ANTT no banco de dados e os converte em um Map
+     * de Chave -> Valor para acesso rápido no cálculo.
+     * * @return Um Map contendo (String chave, BigDecimal valor) dos parâmetros.
+     * 
+     * @throws ResourceNotFoundException Se a tabela de parâmetros estiver vazia,
+     *                                   impossibilitando qualquer cálculo.
+     */
     private Map<String, BigDecimal> buscarParametrosComoMapa() {
         List<AnttParametro> parametros = anttRepository.findAll();
 
@@ -41,37 +57,43 @@ public class AnttParametroService {
     }
 
     /**
-     * Calcula o Piso Mínimo Legal de Frete (ANTT) baseado na distância e nos
-     * pesos/volumes.
+     * Calcula o Piso Mínimo de Frete (PMF) em Reais (BRL), seguindo a estrutura
+     * básica da tabela da ANTT (custo fixo + custo variável + margem).
+     * * NOTA: Esta é uma fórmula simplificada (Linear Model). A ANTT oficial é
+     * complexa (tabelas por tipo de carga, eixos, etc.).
+     * * @param distanciaKm Distância rodoviária em quilômetros.
      * 
-     * @param distanciaKm Distância em quilômetros.
-     * @param pesoTotalKg Peso total da carga em quilogramas (usado como fator de
-     *                    carga).
-     * @return O valor do Piso Mínimo em BRL.
+     * @param pesoTotalKg Peso total da carga em quilogramas (fator de carga).
+     * @return O valor do Piso Mínimo em BRL, arredondado para duas casas decimais.
      */
     public BigDecimal calcularPisoMinimo(BigDecimal distanciaKm, BigDecimal pesoTotalKg) {
 
         Map<String, BigDecimal> params = buscarParametrosComoMapa();
 
-        // --- Exemplo de Parâmetros (Adaptado para o seu modelo Chave/Valor) ---
-        // Se as chaves não existirem, usamos um valor default seguro.
+        // 1. OBTENÇÃO DOS PARÂMETROS
+        // Se as chaves não existirem no DB, usamos um valor default seguro para evitar
+        // falhas no cálculo (embora a busca acima já lance ResourceNotFound se o map
+        // for vazio).
+        // Aqui, garantimos o valor caso o DB tenha só alguns parâmetros.
         BigDecimal custoFixo = params.getOrDefault("CUSTO_FIXO_VIAGEM", new BigDecimal("100.00"));
         BigDecimal coeficientePorKm = params.getOrDefault("COEFICIENTE_POR_KM", new BigDecimal("0.50"));
         BigDecimal taxaAdministrativa = params.getOrDefault("TAXA_ADMINISTRATIVA", new BigDecimal("0.05"));
 
-        // 1. Cálculo do Custo Variável (Distância * Coeficiente)
+        // NOTA: Ignoramos o peso (pesoTotalKg) nesta versão simplificada do cálculo.
+        // Em um cenário real, o peso influenciaria no coeficiente por quilômetro.
+
+        // 2. CÁLCULO
+        // Custo Variável (Distância * Coeficiente)
         BigDecimal custoVariavel = distanciaKm.multiply(coeficientePorKm);
 
-        // 2. Custo Total Básico (Fixo + Variável)
+        // Custo Total Básico (Fixo + Variável)
         BigDecimal custoTotalBasico = custoFixo.add(custoVariavel);
 
-        // 3. Aplicação de Margem Mínima Legal
+        // Aplicação de Margem Mínima Legal (Ex: 5% de margem)
         // Valor Final = Custo Total Básico * (1 + Taxa Administrativa)
         BigDecimal valorFinal = custoTotalBasico.multiply(BigDecimal.ONE.add(taxaAdministrativa));
 
-        // NOTA: Ignoramos o peso na fórmula simplificada, mas ele seria um fator
-        // multiplicador aqui.
-
-        return valorFinal.setScale(2, RoundingMode.HALF_UP);
+        // 3. RETORNO (Garante 2 casas decimais e arredondamento)
+        return valorFinal.setScale(CASAS_DECIMAIS, MODO_ARREDONDAMENTO);
     }
 }

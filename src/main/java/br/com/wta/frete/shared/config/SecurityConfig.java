@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+// import org.springframework.security.web.util.matcher.AntPathRequestMatcher; // Não é mais necessário
 
 import br.com.wta.frete.core.service.CustomOAuth2UserService;
 
@@ -21,23 +22,11 @@ import br.com.wta.frete.core.service.CustomOAuth2UserService;
 @EnableWebSecurity
 public class SecurityConfig {
 
-        // ❌ CORREÇÃO: Removemos a injeção de campo. Este campo não é mais necessário.
-        // private final CustomOAuth2UserService customOAuth2UserService;
-
-        /**
-         * ❌ CORREÇÃO: Removemos o construtor que causava a dependência circular.
-         * * public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
-         * this.customOAuth2UserService = customOAuth2UserService;
-         * }
-         */
-
-        // Construtor sem argumentos (ou padrão) é implícito ou pode ser mantido vazio
-        // se necessário.
-
         /**
          * BEAN: PasswordEncoder
          * Propósito: Fornece o algoritmo de criptografia BCrypt (padrão e recomendado).
-         * * @return Uma instância de BCryptPasswordEncoder.
+         * 
+         * @return Uma instância de BCryptPasswordEncoder.
          */
         @Bean
         PasswordEncoder passwordEncoder() {
@@ -47,30 +36,35 @@ public class SecurityConfig {
         /**
          * BEAN: SecurityFilterChain (Perfil 'dev')
          * Propósito: Configura a segurança para o ambiente de DESENVOLVIMENTO ('dev').
-         * ... (comentários omitidos por brevidade) ...
+         * Libera o acesso a todos os endpoints do Actuator e rotas públicas/API.
+         * * @param http Objeto para configurar o HttpSecurity.
+         * 
+         * @param customOAuth2UserService Serviço injetado para lidar com dados do
+         *                                usuário OAuth2.
+         * @return Uma SecurityFilterChain configurada.
          */
         @Bean
         @Profile("dev")
         SecurityFilterChain securityFilterChainDev(
                         HttpSecurity http,
-                        CustomOAuth2UserService customOAuth2UserService // ✅ Injeção Corrigida aqui
-        ) throws Exception {
+                        CustomOAuth2UserService customOAuth2UserService) throws Exception {
                 http
-                                // 1. Configuração do CSRF (Desabilitado para simplificar APIs REST)
+                                // 1. Configuração do CSRF
                                 .csrf(AbstractHttpConfigurer::disable)
 
                                 // 2. Regras de Autorização de Requisição
                                 .authorizeHttpRequests(authorize -> authorize
-                                                // Rotas Públicas: Permitem acesso sem autenticação
+                                                // Rotas Públicas (App e API /dev/): Permitem acesso sem autenticação
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/login",
-                                                                // NOVO: Permite acesso a todos os endpoints da API para
-                                                                // desenvolvimento
                                                                 "/api/**",
                                                                 "/api/pessoas/cadastro/**",
                                                                 "/api/v1/ativacao/**",
                                                                 "/public/**",
+                                                                // 🟢 ADIÇÃO PARA LIBERAR ACTUATOR: Libera todos os
+                                                                // endpoints do Actuator
+                                                                "/actuator/**",
                                                                 // URLs estáticas
                                                                 "/favicon.ico",
                                                                 "/css/**",
@@ -78,22 +72,20 @@ public class SecurityConfig {
                                                                 "/images/**",
                                                                 "/webjars/**")
                                                 .permitAll()
-                                                // Rotas Protegidas (apenas o que não é /api/** estará aqui)
+
+                                                // Rotas Protegidas: O que não foi permitido acima (se houver), exige
+                                                // autenticação.
                                                 .anyRequest().authenticated())
 
                                 // 3. Configuração do Fluxo de Login OAuth2
                                 .oauth2Login(oauth2 -> oauth2
-                                                // Utiliza o nosso serviço personalizado
                                                 .userInfoEndpoint(userInfo -> userInfo
-                                                                // ✅ Usamos a variável do PARÂMETRO aqui.
                                                                 .userService(customOAuth2UserService))
-                                                // URL de sucesso após login bem-sucedido
                                                 .defaultSuccessUrl("/success", true))
 
                                 // 4. Configuração do Fluxo de Logout
                                 .logout(logout -> logout
-                                                .logoutSuccessUrl("/") // Redireciona para a página inicial após o
-                                                                       // logout
+                                                .logoutSuccessUrl("/")
                                                 .permitAll());
 
                 return http.build();
