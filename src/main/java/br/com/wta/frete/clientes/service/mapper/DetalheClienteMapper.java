@@ -9,8 +9,8 @@ import org.mapstruct.ReportingPolicy;
 import br.com.wta.frete.clientes.controller.dto.DetalheClienteRequest;
 import br.com.wta.frete.clientes.controller.dto.DetalheClienteResponse;
 import br.com.wta.frete.clientes.entity.DetalheCliente;
+import br.com.wta.frete.clientes.entity.enums.TipoCliente;
 import br.com.wta.frete.core.entity.Pessoa;
-import br.com.wta.frete.core.entity.enums.TipoCliente;
 import br.com.wta.frete.core.service.mapper.PessoaMapper;
 import br.com.wta.frete.shared.exception.InvalidDataException;
 

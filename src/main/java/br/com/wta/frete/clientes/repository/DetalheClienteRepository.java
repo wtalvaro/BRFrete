@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import br.com.wta.frete.clientes.entity.DetalheCliente;
+import br.com.wta.frete.clientes.entity.enums.TipoCliente; // NOVO IMPORT
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ public interface DetalheClienteRepository extends JpaRepository<DetalheCliente, 
 
 	/**
 	 * Busca clientes por tipo (e.g., PF, PJ).
+	 * O tipo agora é o ENUM, garantindo type-safety.
 	 */
-	List<DetalheCliente> findByTipoCliente(String tipoCliente);
+	List<DetalheCliente> findByTipoCliente(TipoCliente tipoCliente); // CORRIGIDO: Uso do TipoCliente (Enum)
 }

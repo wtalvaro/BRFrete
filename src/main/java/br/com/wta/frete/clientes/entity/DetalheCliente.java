@@ -1,7 +1,10 @@
 package br.com.wta.frete.clientes.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import br.com.wta.frete.clientes.entity.enums.TipoCliente;
 import br.com.wta.frete.core.entity.Pessoa;
-import br.com.wta.frete.core.entity.enums.TipoCliente;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,11 +37,12 @@ public class DetalheCliente {
 	private Pessoa pessoa;
 
 	/**
-	 * Tipo de cliente (e.g., PF, PJ, Cooperativa) (VARCHAR(20) NOT NULL).
+	 * Tipo de cliente (e.g., PF, PJ, Cooperativa, Governo).
 	 */
-	@Enumerated(EnumType.STRING) // <<< NOVO: Mapeia o Enum como String
-	@Column(name = "tipo_cliente", nullable = false, length = 20)
-	private TipoCliente tipoCliente; // <<< NOVO: Tipo de dado alterado para Enum
+	@Enumerated(EnumType.STRING)
+	@JdbcTypeCode(SqlTypes.NAMED_ENUM) // Mapeia o ENUM corretamente para o PostgreSQL
+	@Column(name = "tipo_cliente", nullable = false)
+	private TipoCliente tipoCliente;
 
 	/**
 	 * Preferências específicas para coleta (TEXT).

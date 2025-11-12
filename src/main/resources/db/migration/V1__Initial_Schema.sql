@@ -223,6 +223,15 @@ CREATE TYPE inventario.tipo_material_enum AS ENUM (
     'OUTROS'
 );
 
+-- DROP (se existir) para garantir que a migração seja idempotente
+DROP TYPE IF EXISTS clientes.tipo_cliente_enum CASCADE;
+CREATE TYPE clientes.tipo_cliente_enum AS ENUM (
+    'PESSOA_FISICA',  -- Clientes pessoa física
+    'PESSOA_JURIDICA',-- Clientes pessoa jurídica (empresas)
+    'COOPERATIVA',    -- Cooperativas ou associações
+    'GOVERNO'         -- Entidades governamentais, se aplicável
+);
+
 -- ======================================================================
 -- 3. SCHEMA CORE: Identidades e Perfis M:M (Tabelas MESTRAS)
 -- ======================================================================
@@ -430,7 +439,8 @@ COMMENT ON TABLE colaboradores.metricas_transportador IS
 
 CREATE TABLE clientes.detalhes (
     pessoa_id BIGINT PRIMARY KEY,
-    tipo_cliente VARCHAR(20) NOT NULL,
+    -- COLUNA ATUALIZADA: Usando o novo tipo ENUM com o esquema qualificado
+    tipo_cliente clientes.tipo_cliente_enum NOT NULL DEFAULT 'PESSOA_FISICA'::clientes.tipo_cliente_enum,
     preferencias_coleta TEXT,
     FOREIGN KEY (pessoa_id) REFERENCES core.pessoas(pessoa_id) ON DELETE CASCADE
 );

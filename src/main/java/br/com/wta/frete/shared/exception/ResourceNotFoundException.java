@@ -15,12 +15,33 @@ public class ResourceNotFoundException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
+    // NOVO CAMPO: Para armazenar o código de erro/negócio
+    private final String errorCode;
+
     /**
-     * Construtor que aceita uma mensagem de erro.
-     * 
-     * @param message A mensagem detalhada do erro.
+     * Construtor que aceita uma mensagem de erro (antigo construtor).
+     * * @param message A mensagem detalhada do erro.
      */
     public ResourceNotFoundException(String message) {
         super(message);
+        this.errorCode = null; // Código nulo se não for fornecido
+    }
+
+    /**
+     * NOVO CONSTRUTOR: Aceita mensagem e um código de erro de negócio.
+     * * @param message A mensagem detalhada do erro.
+     * 
+     * @param errorCode O código de erro de negócio (ex: "PESSOA_NAO_ENCONTRADA").
+     */
+    public ResourceNotFoundException(String message, String errorCode) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+
+    /**
+     * Getter para o código de erro.
+     */
+    public String getErrorCode() {
+        return errorCode;
     }
 }

@@ -2,13 +2,13 @@ package br.com.wta.frete.clientes.service.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget; // Importação essencial para MapStruct Update
 import org.mapstruct.ReportingPolicy;
 
 import br.com.wta.frete.clientes.controller.dto.PedidoColetaRequest;
 import br.com.wta.frete.clientes.controller.dto.PedidoColetaResponse;
 import br.com.wta.frete.clientes.entity.DetalheCliente;
 import br.com.wta.frete.clientes.entity.PedidoColeta;
-import br.com.wta.frete.core.entity.Pessoa;
 
 /**
  * Interface Mapper para converter PedidoColetaRequest/Response e a entidade
@@ -21,9 +21,9 @@ public interface PedidoColetaMapper {
 	// --- Mapeamento de Requisição (DTO -> Entidade) ---
 
 	/**
-	 * Converte o PedidoColetaRequest no PedidoColeta para persistência.
+	 * Converte o PedidoColetaRequest no PedidoColeta para persistência (CREATE).
+	 * * @param dto O DTO de entrada.
 	 * 
-	 * @param dto O DTO de entrada.
 	 * @return A Entidade PedidoColeta.
 	 */
 	@Mapping(target = "id", ignore = true) // ID é SERIAL/IDENTITY, ignoramos na Request
@@ -33,12 +33,30 @@ public interface PedidoColetaMapper {
 	@Mapping(target = "cliente", expression = "java(PedidoColetaMapper.mapDetalheCliente(dto.clientePessoaId()))")
 	PedidoColeta toEntity(PedidoColetaRequest dto);
 
+	// --- Mapeamento de Atualização (DTO -> Entidade Existente) ---
+
+	/**
+	 * Atualiza uma Entidade PedidoColeta existente com os dados do Request
+	 * (UPDATE).
+	 * * @param dto O DTO de entrada.
+	 * 
+	 * @param entity A entidade PedidoColeta existente a ser atualizada.
+	 */
+	// Campos que não devem ser alterados pelo DTO:
+	@Mapping(target = "id", ignore = true) // Chave Primária não muda
+	@Mapping(target = "dataSolicitacao", ignore = true) // Data de criação/solicitação original não muda
+
+	// A FK do cliente não deve ser alterada no UPDATE via este DTO, então
+	// ignoramos.
+	@Mapping(target = "cliente", ignore = true)
+	void updateEntity(PedidoColetaRequest dto, @MappingTarget PedidoColeta entity);
+
 	// --- Mapeamento de Resposta (Entidade -> DTO) ---
 
 	/**
 	 * Converte a Entidade PedidoColeta no PedidoColetaResponse.
+	 * * @param entity A Entidade PedidoColeta retornada do banco.
 	 * 
-	 * @param entity A Entidade PedidoColeta retornada do banco.
 	 * @return O DTO de resposta.
 	 */
 	@Mapping(target = "pedidoId", source = "id") // Renomeia 'id' para 'pedidoId'
@@ -59,14 +77,10 @@ public interface PedidoColetaMapper {
 			return null;
 		}
 
-		// Criamos o esqueleto da Pessoa para satisfazer a Entidade DetalheCliente
-		Pessoa pessoa = new Pessoa();
-		pessoa.setId(clientePessoaId);
-
-		// Criamos a Entidade DetalheCliente e setamos a chave
+		// Criamos a Entidade DetalheCliente de referência
 		DetalheCliente dc = new DetalheCliente();
+		// Apenas setamos o ID da Pessoa, que é a Chave Primária/Estrangeira
 		dc.setPessoaId(clientePessoaId);
-		dc.setPessoa(pessoa);
 
 		return dc;
 	}
