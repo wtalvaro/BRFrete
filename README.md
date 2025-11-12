@@ -102,3 +102,7 @@ O projeto é modularizado de acordo com os schemas de base de dados, garantindo 
 
 ```bash
 mvn spring-boot:run
+
+## 📝 Licença
+
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.

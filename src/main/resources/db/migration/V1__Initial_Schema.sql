@@ -387,12 +387,6 @@ CREATE TABLE colaboradores.veiculos (
     -- agora usa o ENUM nativo do PostgreSQL.
 );
 
--- ======================================================================
--- Módulo: COLABORADORES
--- 1. CRIAÇÃO DA TABELA: metricas_transportador
--- Catálogo de Métricas de Preços para os veículos de um Transportador.
--- ======================================================================
-
 CREATE TABLE colaboradores.metricas_transportador (
     -- Chave Primária para a Métrica
     metrica_id BIGSERIAL PRIMARY KEY,
