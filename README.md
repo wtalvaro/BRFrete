@@ -10,6 +10,26 @@ O objetivo principal é criar um hub digital para a economia circular e logísti
   * **Logística de Leilão Reverso:** Sistema de negociação onde transportadores competem com lances para fretes de clientes locais, garantindo o melhor custo-benefício e agilidade.
   * **Monetização Central:** Focada no **Transportador (Colaborador)** através de uma comissão sobre o valor do frete (`logistica.lances.valor_lance`) e serviços financeiros de alto valor, como o **Adiantamento de Recebíveis** (Factoring).
 
+## 🌟 Destaques Técnicos e Qualificação de Portfólio
+
+Este projeto foi desenvolvido com foco na aplicação rigorosa das **melhores práticas do mercado**, servindo como uma demonstração da minha maturidade técnica no ecossistema Java e Spring.
+
+**O que o projeto demonstra:**
+
+### 1. Arquitetura e Estrutura Empresarial
+* **Monolito Modular e Arquitetura em Camadas:** O código é estritamente dividido nas camadas **Controller**, **Service** e **Repository**, com clara separação de responsabilidades. A estrutura modularizada (separação por Schemas: `core`, `logistica`, `marketplace`) garante **alta coesão** e fácil manutenção.
+* **Design de APIs Robustas:** Implementação de APIs RESTful que utilizam **códigos HTTP semânticos** (ex: 201 Created, 404 Not Found) e tratamento de exceções centralizado, garantindo previsibilidade para o consumidor da API.
+
+### 2. Padrões de Código Moderno (Java & Spring)
+* **Imutabilidade e Concisão:** Uso consistente de **Java Records** para DTOs (Data Transfer Objects), aproveitando recursos modernos do Java para garantir a imutabilidade dos dados de entrada e saída.
+* **Mapeamento de Dados Otimizado:** Utilização do **MapStruct** para realizar a conversão entre Entidades e DTOs, eliminando o código repetitivo (*boilerplate*) e mantendo a lógica de negócio isolada na camada Service.
+
+### 3. Persistência e Otimização JPA
+* **Modelagem de Domínio Complexo:** Capacidade comprovada de modelar **relacionamentos complexos** (1:1, N:M) e entidades de domínio específico (como `ContaDigital` e `Mensagem`).
+* **Otimização de Consultas:** Implementação de consultas avançadas com Spring Data JPA, utilizando a convenção de nomes de métodos (`findBy...OrderBy...`) para otimizar buscas e ordenação diretamente no banco de dados (ex: busca otimizada de mensagens por conversa e data).
+
+---
+
 ## 🛠️ Stack Tecnológica
 
 A plataforma é construída como um **Monolito Modular** em Java, utilizando uma arquitetura em camadas (`Controller -> Service -> Repository`) para garantir a manutenibilidade e a clareza.
