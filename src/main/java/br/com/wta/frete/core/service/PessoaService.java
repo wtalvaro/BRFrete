@@ -108,12 +108,17 @@ public class PessoaService {
     @Transactional
     public Pessoa atualizarPessoa(Long pessoaId, PessoaRequest request) {
         Pessoa pessoaExistente = buscarPorId(pessoaId);
-        
+
         // Regra de Negócio: Campos que podem ser alterados pelo usuário via PUT
         pessoaExistente.setNome(request.nomeCompleto());
-        pessoaExistente.setTelefone(request.telefone());
-        // E-mail e documento são considerados campos sensíveis e exigem fluxo de validação separado.
-        
+
+        // CORREÇÃO: Deve usar request.telefone() e NÃO request.senha()
+        pessoaExistente.setTelefone(request.telefone()); // <-- CORRIGIDO AQUI!
+
+        // Se houver mais campos que você queira garantir que não estão sendo usados
+        // pessoaExistente.setSenha(pessoaExistente.getSenha()); // Senha não deve ser
+        // alterada aqui.
+
         return pessoaRepository.save(pessoaExistente);
     }
 
