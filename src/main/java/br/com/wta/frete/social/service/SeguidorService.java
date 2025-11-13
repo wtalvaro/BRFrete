@@ -32,6 +32,7 @@ public class SeguidorService {
      * @param request DTO com os IDs do seguidor e do seguido.
      * @return O DTO de resposta confirmando a relação.
      */
+    @SuppressWarnings("null")
     @Transactional
     public SeguidorResponse seguirPessoa(SeguidorRequest request) {
         Long seguidorId = request.seguidorId();

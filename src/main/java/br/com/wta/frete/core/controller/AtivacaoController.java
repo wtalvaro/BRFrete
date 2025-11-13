@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Endpoint que trata o clique no link de ativação enviado por e-mail (Fase 3).
  */
 @RestController
-@RequestMapping("/api/v1/ativacao")
+@RequestMapping("/api/v1/core/ativacao")
 @Tag(name = "Ativação", description = "Endpoints para a gestão de ativação de conta via Token.") // NOVO
 public class AtivacaoController {
 

@@ -37,6 +37,7 @@ public class AvaliacaoService {
      * @param request DTO com os dados da avaliação e a chave polimórfica.
      * @return O DTO de resposta da avaliação salva.
      */
+    @SuppressWarnings("null")
     @Transactional
     public AvaliacaoResponse registrarAvaliacao(AvaliacaoRequest request) {
 

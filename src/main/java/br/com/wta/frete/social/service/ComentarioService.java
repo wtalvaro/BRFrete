@@ -37,6 +37,7 @@ public class ComentarioService {
      *                resposta).
      * @return O DTO de resposta do comentário salvo.
      */
+    @SuppressWarnings("null")
     @Transactional
     public ComentarioResponse postarComentario(ComentarioRequest request) {
 

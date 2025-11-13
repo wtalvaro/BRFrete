@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor; // Adicionado para injeção via construt
  * Responsável por gerenciar as requisições HTTP da API.
  */
 @RestController
-@RequestMapping("/api/v1/pessoas")
+@RequestMapping("/api/v1/core/pessoas")
 @Tag(name = "Pessoa", description = "Endpoints para o cadastro e gestão de dados básicos de usuários (Pessoas).")
 @RequiredArgsConstructor
 public class PessoaController {
