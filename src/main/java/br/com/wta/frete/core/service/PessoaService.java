@@ -1,14 +1,17 @@
 package br.com.wta.frete.core.service;
 
+import java.util.List;
+
 // Os imports são drasticamente reduzidos!
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.wta.frete.core.controller.dto.PessoaRequest;
 import br.com.wta.frete.core.controller.dto.CadastroSimplificadoRequest;
 import br.com.wta.frete.core.controller.dto.OAuth2UserRequestDTO;
+import br.com.wta.frete.core.controller.dto.PessoaRequest;
 import br.com.wta.frete.core.entity.Pessoa;
 import br.com.wta.frete.core.repository.PessoaRepository;
+import br.com.wta.frete.shared.exception.ResourceNotFoundException;
 
 /**
  * Service de Orquestração (Fachada) para a entidade Pessoa.
@@ -65,20 +68,90 @@ public class PessoaService {
     }
 
     // =================================================================
-    // MÉTODOS CORE (Gerenciamento de Estado)
+    // CRUD: READ (Leitura)
     // =================================================================
 
     /**
-     * Documentação: Ativa a conta da Pessoa no PostgreSQL.
+     * Busca uma Pessoa pelo ID (Chave Primária).
+     * @param pessoaId O ID da Pessoa.
+     * @return A entidade Pessoa.
+     * @throws ResourceNotFoundException Se a Pessoa não for encontrada.
+     */
+    @SuppressWarnings("null")
+    public Pessoa buscarPorId(Long pessoaId) {
+        return pessoaRepository.findById(pessoaId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    String.format("Pessoa não encontrada para o ID: '%d'", pessoaId),
+                    "PESSOA_NAO_ENCONTRADA_ID"
+                ));
+    }
+
+    /**
+     * Lista todas as Pessoas cadastradas.
+     * @return Uma lista de entidades Pessoa.
+     */
+    public List<Pessoa> listarTodas() {
+        return pessoaRepository.findAll();
+    }
+
+    // =================================================================
+    // CRUD: UPDATE (Atualização)
+    // =================================================================
+
+    /**
+     * Atualiza os dados básicos de uma Pessoa existente (nome, telefone).
+     * * @param pessoaId O ID da Pessoa a ser atualizada.
+     * @param request O DTO com os novos dados (PessoaRequest).
+     * @return A entidade Pessoa atualizada.
+     * @throws ResourceNotFoundException Se a Pessoa não for encontrada.
+     */
+    @Transactional
+    public Pessoa atualizarPessoa(Long pessoaId, PessoaRequest request) {
+        Pessoa pessoaExistente = buscarPorId(pessoaId);
+        
+        // Regra de Negócio: Campos que podem ser alterados pelo usuário via PUT
+        pessoaExistente.setNome(request.nomeCompleto());
+        pessoaExistente.setTelefone(request.telefone());
+        // E-mail e documento são considerados campos sensíveis e exigem fluxo de validação separado.
+        
+        return pessoaRepository.save(pessoaExistente);
+    }
+
+    // =================================================================
+    // CRUD: DELETE (Deletar)
+    // =================================================================
+
+    /**
+     * Deleta uma Pessoa pelo ID.
+     *
+     * @param pessoaId O ID da Pessoa a ser deletada.
+     * @throws ResourceNotFoundException Se a Pessoa não for encontrada.
+     */
+    @SuppressWarnings("null")
+    @Transactional
+    public void deletarPessoa(Long pessoaId) {
+        Pessoa pessoa = buscarPorId(pessoaId); // Garante que a pessoa existe
+        
+        // A deleção CASCADE (se configurada no banco) ou o CascadeType.ALL nas relações JPA 
+        // tratará entidades dependentes (como PessoaPerfil).
+        
+        pessoaRepository.delete(pessoa);
+    }
+
+    // =================================================================
+    // MÉTODOS CORE (Gerenciamento de Estado) - Originalmente no Service
+    // =================================================================
+
+    /**
+     * Ativa a conta da Pessoa no PostgreSQL.
      * Esta é uma responsabilidade CORE de gestão de estado do utilizador.
      * * @param pessoaId O ID da Pessoa a ser ativada.
      */
     @Transactional
     public void ativarPessoa(Long pessoaId) {
-        @SuppressWarnings("null")
-        Pessoa pessoa = pessoaRepository.findById(pessoaId)
-                .orElseThrow(() -> new IllegalArgumentException("Pessoa não encontrada para ativação."));
-
+        // CORRIGIDO: Usa buscarPorId() para lançar ResourceNotFoundException consistente.
+        Pessoa pessoa = buscarPorId(pessoaId); 
+        
         // Se a pessoa já estiver ativa, não faz nada
         if (pessoa.isAtivo()) {
             return;

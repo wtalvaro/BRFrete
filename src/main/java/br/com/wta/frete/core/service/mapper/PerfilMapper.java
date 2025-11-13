@@ -5,6 +5,7 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import br.com.wta.frete.core.controller.dto.PerfilRequest; // NOVO IMPORT
 import br.com.wta.frete.core.controller.dto.PerfilResponse;
 import br.com.wta.frete.core.entity.Perfil;
 
@@ -16,23 +17,23 @@ import br.com.wta.frete.core.entity.Perfil;
 public interface PerfilMapper {
 
 	/**
-	 * Mapeia um objeto Perfil (Entidade) para um PerfilResponse (DTO). * @param
-	 * entity A entidade Perfil a ser mapeada.
-	 * 
-	 * @return O DTO PerfilResponse preenchido. * Nota sobre o mapeamento:
-	 *         - @Mapping(source = "id", target = "perfilId"): Resolve a diferença
-	 *         de nomenclatura entre a Entity (id) e o DTO (perfilId). - Os campos
-	 *         com nomes idênticos (nomePerfil e descricao) são mapeados
-	 *         automaticamente pelo MapStruct.
+	 * Mapeia um objeto Perfil (Entidade) para um PerfilResponse (DTO).
 	 */
 	@Mapping(source = "id", target = "perfilId")
 	PerfilResponse toResponse(Perfil entity);
 
 	/**
-	 * Mapeia uma lista de entidades Perfil para uma lista de DTOs PerfilResponse.
-	 * * @param entities A lista de entidades Perfil.
+	 * Mapeia um PerfilRequest (DTO de Requisição) para a entidade Perfil.
+	 * O campo 'id' (PK) é ignorado, pois é gerado pelo banco de dados.
 	 * 
-	 * @return A lista de DTOs PerfilResponse.
+	 * @param request O DTO de requisição.
+	 * @return A entidade Perfil para persistência.
+	 */
+	@Mapping(target = "id", ignore = true)
+	Perfil toEntity(PerfilRequest request); // <<< NOVO MÉTODO
+
+	/**
+	 * Mapeia uma lista de entidades Perfil para uma lista de DTOs PerfilResponse.
 	 */
 	List<PerfilResponse> toResponseList(List<Perfil> entities);
 }

@@ -1,5 +1,8 @@
 package br.com.wta.frete.core.service.mapper;
 
+import java.util.List; // Importar List
+import java.util.stream.Collectors; // Importar Collectors
+
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -16,18 +19,30 @@ public interface ContaDigitalMapper {
 
 	/**
 	 * Converte a entidade ContaDigital para o DTO de resposta ContaDigitalResponse.
-	 * * Nota: O MapStruct converte o Enum StatusKYC (Entity) para String (DTO)
-	 * automaticamente (usando o nome da constante do Enum). * @param entity A
-	 * entidade ContaDigital a ser convertida.
+	 * * @param entity A entidade ContaDigital a ser convertida.
 	 * 
 	 * @return O DTO ContaDigitalResponse.
 	 */
 	ContaDigitalResponse toResponse(ContaDigital entity);
 
-	// Opcional: Adicionar um mapeamento para converter o StatusKYC para String de
-	// forma explícita
-	// Isso é opcional, pois a conversão implícita já funciona, mas é um bom
-	// exemplo!
+	// CORREÇÃO: Implementação do método default para listagem.
+	/**
+	 * Converte uma lista de Entidades ContaDigital para uma lista de DTOs de
+	 * Resposta.
+	 *
+	 * @param entities A lista de entidades ContaDigital.
+	 * @return A lista de DTOs ContaDigitalResponse.
+	 */
+	default List<ContaDigitalResponse> toResponseList(List<ContaDigital> entities) {
+		if (entities == null) {
+			return List.of();
+		}
+		// Mapeia cada item da lista usando o toResponse()
+		return entities.stream()
+				.map(this::toResponse)
+				.collect(Collectors.toList());
+	}
+
 	default String mapStatusKyc(StatusKYC status) {
 		return status != null ? status.name() : null;
 	}

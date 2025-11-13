@@ -1,5 +1,7 @@
 package br.com.wta.frete.core.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +16,10 @@ import br.com.wta.frete.core.entity.Mensagem;
 @Repository
 public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
 
-	// Método de exemplo para buscar mensagens por conversa, ordenadas por data.
-	// List<Mensagem> findByConversaIdOrderByDataMensagemAsc(Long conversaId);
+	/**
+	 * Busca todas as mensagens pertencentes a uma conversa específica,
+	 * ordenando-as pela data de envio (dataEnvio) em ordem ascendente.
+	 * (CORRIGIDO: O nome do campo é dataEnvio, e não dataMensagem)
+	 */
+	List<Mensagem> findByConversaIdOrderByDataEnvioAsc(Long conversaId);
 }
