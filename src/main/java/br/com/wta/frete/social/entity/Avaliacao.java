@@ -1,15 +1,24 @@
 package br.com.wta.frete.social.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.time.ZonedDateTime;
 
 import br.com.wta.frete.core.entity.Pessoa;
 import br.com.wta.frete.logistica.entity.OrdemServico;
 import br.com.wta.frete.marketplace.entity.Produto;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Mapeia a tabela 'social.avaliacoes'. Implementa a lógica polimórfica para
@@ -67,10 +76,11 @@ public class Avaliacao {
 	// --- Dados da Avaliação ---
 
 	/**
-	 * Nota da avaliação (INTEGER NOT NULL). Restrição de 1 a 5 no SQL, mas aqui
+	 * Nota da avaliação (SMALLINT NOT NULL). Restrição de 1 a 5 no SQL, mas aqui
 	 * usamos a lógica de aplicação.
+	 * * **CORREÇÃO: Mapeado para a coluna 'pontuacao' do SQL.**
 	 */
-	@Column(name = "nota", nullable = false)
+	@Column(name = "pontuacao", nullable = false) // <--- AJUSTADO
 	private Integer nota;
 
 	/**

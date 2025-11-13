@@ -71,8 +71,9 @@ public class Comentario {
 
 	/**
 	 * O conteúdo do comentário (TEXT NOT NULL).
+	 * **CORREÇÃO: Mapeado para a coluna 'texto_conteudo' do SQL.**
 	 */
-	@Column(name = "texto_comentario", nullable = false, columnDefinition = "TEXT")
+	@Column(name = "texto_conteudo", nullable = false, columnDefinition = "TEXT") // <--- AJUSTADO
 	private String textoComentario;
 
 	/**
