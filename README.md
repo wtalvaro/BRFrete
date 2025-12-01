@@ -100,7 +100,7 @@ O projeto é modularizado de acordo com os schemas de base de dados, garantindo 
     spring.datasource.hikari.minimum-idle=5
     
     # =======================================================
-    # 5. CONFIGURAÇÃO DE EMAIL (SMTP - Gmail)
+    # 3. CONFIGURAÇÃO DE EMAIL (SMTP - Gmail)
     # =======================================================
     spring.mail.host=smtp.gmail.com
     spring.mail.port=587
@@ -109,7 +109,7 @@ O projeto é modularizado de acordo com os schemas de base de dados, garantindo 
     spring.mail.properties.mail.smtp.from=noreply@brfrete.com
     
     # =======================================================
-    # 6. CONFIGURAÇÃO OAUTH2 (LOGIN SOCIAL)
+    # 4. CONFIGURAÇÃO OAUTH2 (LOGIN SOCIAL)
     # =======================================================
     # Registra o Google como Provedor OAuth2 para Login Social.
     spring.security.oauth2.client.registration.google.client-id=[YOUR_GOOGLE_CLIENT_ID]
